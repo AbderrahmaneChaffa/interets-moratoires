@@ -1,6 +1,10 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Livewire\ClientCrud;
+use App\Http\Livewire\FactureForm;
+use App\Http\Livewire\FactureList;
+use App\Http\Livewire\FactureTable;
 
 /*
 |--------------------------------------------------------------------------
@@ -16,3 +20,8 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('welcome');
 });
+
+Route::get('/clients', ClientCrud::class)->name('clients');
+Route::get('/factures/creer', FactureForm::class)->name('factures.creer');
+Route::get('/factures', FactureList::class)->name('factures');
+Route::get('/factures/tableau', FactureTable::class)->name('factures.tableau');
