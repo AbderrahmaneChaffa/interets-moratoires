@@ -1,5 +1,6 @@
+
 @section('title', 'Gestion des clients')
-@section('content')
+
 <div class="container mt-4">
     <h2>Gestion des clients</h2>
     @if (session()->has('message'))
@@ -62,4 +63,4 @@
     </table>
     {{ $clients->links() }}
 </div>
-@endsection
+

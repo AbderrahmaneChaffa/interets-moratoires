@@ -1,6 +1,6 @@
 
 @section('title', 'Créer une facture')
-@section('content')
+
 <div class="container mt-4">
     <h2>Créer une facture</h2>
     @if (session()->has('message'))
@@ -61,4 +61,4 @@
         <button type="submit" class="btn btn-success">Créer la facture</button>
     </form>
 </div>
-@endsection
+

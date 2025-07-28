@@ -1,6 +1,6 @@
 
 @section('title', 'Liste des factures')
-@section('content')
+
 <div class="container mt-4">
     <h2>Liste des factures</h2>
     @if (session()->has('interet'))
@@ -48,4 +48,4 @@
     </table>
     {{ $factures->links() }}
 </div>
-@endsection
+

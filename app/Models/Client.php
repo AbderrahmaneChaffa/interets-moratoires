@@ -9,6 +9,13 @@ class Client extends Model
 {
     use HasFactory;
 
+    protected $fillable = [
+        'raison_sociale',
+        'nif',
+        'rc',
+        'adresse',
+    ];
+
     public function factures()
     {
         return $this->hasMany(Facture::class);

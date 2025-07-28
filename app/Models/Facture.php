@@ -9,6 +9,17 @@ class Facture extends Model
 {
     use HasFactory;
 
+    protected $fillable = [
+        'client_id',
+        'reference',
+        'date_facture',
+        'montant_ht',
+        'date_depot',
+        'date_reglement',
+        'net_a_payer',
+        'statut_paiement',
+    ];
+
     public function client()
     {
         return $this->belongsTo(Client::class);
