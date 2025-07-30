@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -7,6 +8,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     @livewireStyles
 </head>
+
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
@@ -30,6 +32,18 @@
                     </li>
                 </ul>
             </div>
+            @if (auth()->check())
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+                            <button type="submit" class="btn btn-link nav-link" style="color:white;">Se
+                                déconnecter</button>
+                        </form>
+                    </li>
+                </ul>
+            @endif
+
         </div>
     </nav>
 
@@ -89,4 +103,5 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     @livewireScripts
 </body>
+
 </html>
