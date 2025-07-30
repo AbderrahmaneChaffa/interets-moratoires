@@ -11,6 +11,7 @@ class FactureForm extends Component
     public $client_id, $client_search = '', $reference, $date_facture, $montant_ht, $date_depot, $date_reglement, $net_a_payer, $statut_paiement;
     public $clients = [];
     public $showClientDropdown = false;
+    public $facture_pdf;
 
     protected $rules = [
         'client_id' => 'required|exists:clients,id',
@@ -21,11 +22,12 @@ class FactureForm extends Component
         'date_reglement' => 'nullable|date',
         'net_a_payer' => 'required|numeric',
         'statut_paiement' => 'required|string|max:255',
+        'facture_pdf' => 'nullable|file|mimes:pdf|max:20480', // max 20MB
     ];
 
     public function updatedClientSearch()
     {
-        $this->clients = Client::where('raison_sociale', 'like', '%'.$this->client_search.'%')->get();
+        $this->clients = Client::where('raison_sociale', 'like', '%' . $this->client_search . '%')->get();
         $this->showClientDropdown = true;
     }
 
@@ -39,6 +41,9 @@ class FactureForm extends Component
     public function store()
     {
         $this->validate();
+         if ($this->facture_pdf) {
+        $pdfPath = $this->facture_pdf->store('factures'); // saved to storage/app/factures/
+    }
         Facture::create([
             'client_id' => $this->client_id,
             'reference' => $this->reference,
@@ -48,6 +53,7 @@ class FactureForm extends Component
             'date_reglement' => $this->date_reglement,
             'net_a_payer' => $this->net_a_payer,
             'statut_paiement' => $this->statut_paiement,
+             'pdf_path' => $pdfPath ?? null,
         ]);
         session()->flash('message', 'Facture créée avec succès.');
         $this->resetFields();

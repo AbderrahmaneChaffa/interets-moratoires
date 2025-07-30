@@ -1,4 +1,3 @@
-
 @section('title', 'Liste des factures')
 
 <div class="container mt-4">
@@ -28,7 +27,7 @@
             </tr>
         </thead>
         <tbody>
-            @foreach($factures as $facture)
+            @foreach ($factures as $facture)
                 <tr>
                     <td>{{ $facture->id }}</td>
                     <td>{{ $facture->client->raison_sociale ?? '-' }}</td>
@@ -40,7 +39,22 @@
                     <td>{{ $facture->net_a_payer }}</td>
                     <td>{{ $facture->statut_paiement }}</td>
                     <td>
-                        <button wire:click="calculInteret({{ $facture->id }})" class="btn btn-sm btn-info">Calcul intérêt</button>
+                        <button wire:click="calculInteret({{ $facture->id }})" class="btn btn-sm btn-info">Calcul
+                            intérêt</button>
+                        @if ($facture->pdf_path)
+                            <a href="{{ asset('storage/' . $facture->pdf_path) }}" target="_blank"
+                                class="btn btn-sm btn-secondary">
+                                Voir PDF
+                            </a>
+                        @else
+                            <form action="{{ route('factures.upload_pdf', $facture->id) }}" method="POST"
+                                enctype="multipart/form-data" class="d-flex gap-2 align-items-center">
+                                @csrf
+                                <input type="file" name="facture_pdf" accept="application/pdf" required
+                                    class="form-control form-control-sm">
+                                <button type="submit" class="btn btn-sm btn-primary">Uploader</button>
+                            </form>
+                        @endif
                     </td>
                 </tr>
             @endforeach
@@ -48,4 +62,3 @@
     </table>
     {{ $factures->links() }}
 </div>
-

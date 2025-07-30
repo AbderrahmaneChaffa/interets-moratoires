@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\FacturePdfController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Livewire\ClientCrud;
 use App\Http\Livewire\FactureForm;
@@ -25,3 +26,5 @@ Route::get('/clients', ClientCrud::class)->name('clients');
 Route::get('/factures/creer', FactureForm::class)->name('factures.creer');
 Route::get('/factures', FactureList::class)->name('factures');
 Route::get('/factures/tableau', FactureTable::class)->name('factures.tableau');
+
+Route::post('/factures/{facture}/upload-pdf', [FacturePdfController::class, 'upload'])->name('factures.upload_pdf');

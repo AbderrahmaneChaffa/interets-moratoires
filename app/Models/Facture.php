@@ -18,6 +18,7 @@ class Facture extends Model
         'date_reglement',
         'net_a_payer',
         'statut_paiement',
+        'pdf_path'
     ];
 
     public function client()
