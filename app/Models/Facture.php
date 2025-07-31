@@ -18,7 +18,7 @@ class Facture extends Model
         'date_reglement',
         'net_a_payer',
         'statut_paiement',
-        'pdf_path'
+        'pdf_path',
     ];
 
     public function client()
@@ -51,4 +51,4 @@ class Facture extends Model
             'taux_utilise' => $taux_annuel
         ];
     }
-} 
+}

@@ -7,7 +7,7 @@
         <div class="alert alert-success">{{ session('message') }}</div>
     @endif
 
-    <form wire:submit.prevent="{{ $isEdit ? 'update' : 'store' }}" class="mb-4">
+    <form wire:submit.prevent="{{ $isEdit ? 'update' : 'store' }}" class="mb-4" enctype="multipart/form-data">
         <div class="row">
             <div class="col">
                 <input type="text" wire:model.defer="raison_sociale" class="form-control" placeholder="Raison sociale" required>

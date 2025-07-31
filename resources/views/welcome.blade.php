@@ -1,107 +1,494 @@
-<!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<x-app-layout>
+    @section('title', 'Accueil - Gestion des Intérêts Moratoires')
 
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Gestion des Intérêts Moratoires</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    @livewireStyles
-</head>
-
-<body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <div class="container">
-            <a class="navbar-brand" href="/">Intérêts Moratoires</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav">
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ route('clients') }}">Gestion Clients</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ route('factures.creer') }}">Créer Facture</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ route('factures') }}">Liste Factures</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ route('factures.tableau') }}">Tableau avec Filtres</a>
-                    </li>
-                </ul>
-            </div>
-            @if (auth()->check())
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <form method="POST" action="{{ route('logout') }}">
-                            @csrf
-                            <button type="submit" class="btn btn-link nav-link" style="color:white;">Se
-                                déconnecter</button>
-                        </form>
-                    </li>
-                </ul>
-            @endif
-
-        </div>
-    </nav>
-
-    <div class="container mt-4">
-        <div class="row">
-            <div class="col-md-12">
-                <div class="card">
-                    <div class="card-header">
-                        <h1 class="card-title">Système de Gestion des Intérêts Moratoires</h1>
-                    </div>
-                    <div class="card-body">
-                        <p class="lead">Bienvenue dans votre application de gestion des intérêts moratoires.</p>
-                        <div class="row mt-4">
-                            <div class="col-md-4">
-                                <div class="card text-center">
-                                    <div class="card-body">
-                                        <h5 class="card-title">Gestion Clients</h5>
-                                        <p class="card-text">Ajouter, modifier et supprimer des clients.</p>
-                                        <a href="{{ route('clients') }}" class="btn btn-primary">Accéder</a>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="card text-center">
-                                    <div class="card-body">
-                                        <h5 class="card-title">Créer Facture</h5>
-                                        <p class="card-text">Créer une nouvelle facture avec auto-complétion client.</p>
-                                        <a href="{{ route('factures.creer') }}" class="btn btn-success">Accéder</a>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="card text-center">
-                                    <div class="card-body">
-                                        <h5 class="card-title">Liste Factures</h5>
-                                        <p class="card-text">Consulter les factures et calculer les intérêts.</p>
-                                        <a href="{{ route('factures') }}" class="btn btn-info">Accéder</a>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="card text-center">
-                                    <div class="card-body">
-                                        <h5 class="card-title">Tableau avec Filtres</h5>
-                                        <p class="card-text">Tableau filtré avec export PDF/Excel.</p>
-                                        <a href="{{ route('factures.tableau') }}" class="btn btn-warning">Accéder</a>
-                                    </div>
-                                </div>
-                            </div>
+    <!-- Hero Section -->
+    <div class="hero-section mb-5">
+        <div class="row align-items-center min-vh-50">
+            <div class="col-lg-6">
+                <div class="hero-content">
+                    <h1 class="hero-title mb-4">
+                        <span class="gradient-text">Système de Gestion</span><br>
+                        des Intérêts Moratoires
+                    </h1>
+                    <p class="hero-subtitle mb-4">
+                        Gérez efficacement vos clients, factures et calculs d'intérêts moratoires avec notre plateforme moderne et intuitive.
+                    </p>
+                    <div class="hero-stats d-flex gap-4 mb-4">
+                        <div class="stat-item">
+                            <div class="stat-number">{{ $totalClients ?? '0' }}</div>
+                            <div class="stat-label">Clients</div>
                         </div>
+                        <div class="stat-item">
+                            <div class="stat-number">{{ $totalFactures ?? '0' }}</div>
+                            <div class="stat-label">Factures</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">{{ number_format($totalInterets ?? 0, 2) }}€</div>
+                            <div class="stat-label">Intérêts</div>
+                        </div>
+                    </div>
+                    <div class="hero-actions">
+                        <a href="{{ route('factures.creer') }}" class="btn btn-primary btn-lg me-3">
+                            <i class="fas fa-plus-circle me-2"></i>
+                            Créer une Facture
+                        </a>
+                        <a href="{{ route('factures.tableau') }}" class="btn btn-outline-primary btn-lg">
+                            <i class="fas fa-chart-bar me-2"></i>
+                            Voir les Rapports
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="hero-image">
+                    <div class="floating-card">
+                        <i class="fas fa-chart-line"></i>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    @livewireScripts
-</body>
+    <!-- Quick Actions Cards -->
+    <div class="row g-4 mb-5">
+        <div class="col-lg-3 col-md-6">
+            <div class="feature-card h-100">
+                <div class="feature-icon bg-primary">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="feature-content">
+                    <h5 class="feature-title">Gestion Clients</h5>
+                    <p class="feature-description">
+                        Ajoutez, modifiez et gérez vos clients en toute simplicité avec notre interface intuitive.
+                    </p>
+                    <div class="feature-stats mb-3">
+                        <small class="text-muted">
+                            <i class="fas fa-user-plus me-1"></i>
+                            Dernière création: {{ $lastClientDate ?? 'Aucune' }}
+                        </small>
+                    </div>
+                    <a href="{{ route('clients') }}" class="btn btn-primary btn-sm">
+                        <i class="fas fa-arrow-right me-1"></i>
+                        Accéder
+                    </a>
+                </div>
+            </div>
+        </div>
 
-</html>
+        <div class="col-lg-3 col-md-6">
+            <div class="feature-card h-100">
+                <div class="feature-icon bg-success">
+                    <i class="fas fa-file-invoice-dollar"></i>
+                </div>
+                <div class="feature-content">
+                    <h5 class="feature-title">Créer Facture</h5>
+                    <p class="feature-description">
+                        Créez rapidement de nouvelles factures avec auto-complétion client et calcul automatique.
+                    </p>
+                    <div class="feature-stats mb-3">
+                        <small class="text-muted">
+                            <i class="fas fa-clock me-1"></i>
+                            Création en moins de 2 minutes
+                        </small>
+                    </div>
+                    <a href="{{ route('factures.creer') }}" class="btn btn-success btn-sm">
+                        <i class="fas fa-plus me-1"></i>
+                        Créer
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6">
+            <div class="feature-card h-100">
+                <div class="feature-icon bg-info">
+                    <i class="fas fa-list-alt"></i>
+                </div>
+                <div class="feature-content">
+                    <h5 class="feature-title">Liste Factures</h5>
+                    <p class="feature-description">
+                        Consultez toutes vos factures et calculez automatiquement les intérêts moratoires.
+                    </p>
+                    <div class="feature-stats mb-3">
+                        <small class="text-muted">
+                            <i class="fas fa-calculator me-1"></i>
+                            Calcul automatique des intérêts
+                        </small>
+                    </div>
+                    <a href="{{ route('factures') }}" class="btn btn-info btn-sm">
+                        <i class="fas fa-eye me-1"></i>
+                        Consulter
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6">
+            <div class="feature-card h-100">
+                <div class="feature-icon bg-warning">
+                    <i class="fas fa-table"></i>
+                </div>
+                <div class="feature-content">
+                    <h5 class="feature-title">Tableau & Filtres</h5>
+                    <p class="feature-description">
+                        Analysez vos données avec des filtres avancés et exportez en PDF ou Excel.
+                    </p>
+                    <div class="feature-stats mb-3">
+                        <small class="text-muted">
+                            <i class="fas fa-download me-1"></i>
+                            Export PDF & Excel disponible
+                        </small>
+                    </div>
+                    <a href="{{ route('factures.tableau') }}" class="btn btn-warning btn-sm">
+                        <i class="fas fa-filter me-1"></i>
+                        Analyser
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity Section -->
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card activity-card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-clock me-2"></i>
+                        Activité Récente
+                    </h5>
+                    <a href="{{ route('factures') }}" class="btn btn-sm btn-outline-primary">
+                        Voir tout
+                    </a>
+                </div>
+                <div class="card-body">
+                    @if(isset($recentActivities) && count($recentActivities) > 0)
+                        <div class="activity-timeline">
+                            @foreach($recentActivities as $activity)
+                                <div class="activity-item">
+                                    <div class="activity-icon">
+                                        <i class="fas fa-{{ $activity['icon'] }}"></i>
+                                    </div>
+                                    <div class="activity-content">
+                                        <div class="activity-title">{{ $activity['title'] }}</div>
+                                        <div class="activity-description">{{ $activity['description'] }}</div>
+                                        <div class="activity-time">{{ $activity['time'] }}</div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    @else
+                        <div class="empty-state text-center py-4">
+                            <i class="fas fa-history fa-3x text-muted mb-3"></i>
+                            <h6 class="text-muted">Aucune activité récente</h6>
+                            <p class="text-muted small">Commencez par créer votre première facture</p>
+                            <a href="{{ route('factures.creer') }}" class="btn btn-primary btn-sm">
+                                Créer une facture
+                            </a>
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card summary-card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-pie me-2"></i>
+                        Résumé Mensuel
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="summary-item">
+                        <div class="summary-label">Factures ce mois</div>
+                        <div class="summary-value text-primary">{{ $monthlyInvoices ?? '0' }}</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-label">Intérêts calculés</div>
+                        <div class="summary-value text-success">{{ number_format($monthlyInterests ?? 0, 2) }}€</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-label">Nouveaux clients</div>
+                        <div class="summary-value text-info">{{ $monthlyClients ?? '0' }}</div>
+                    </div>
+                    <div class="summary-item border-0">
+                        <div class="summary-label">Taux moyen</div>
+                        <div class="summary-value text-warning">{{ number_format($averageRate ?? 0, 2) }}%</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Tips Card -->
+            <div class="card tips-card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-lightbulb me-2"></i>
+                        Conseil du Jour
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="tip-content">
+                        <i class="fas fa-info-circle text-primary me-2"></i>
+                        <span>Utilisez les filtres avancés pour analyser vos factures par période et optimiser vos relances.</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Styles for Welcome Page -->
+    <style>
+        .hero-section {
+            padding: 2rem 0;
+        }
+
+        .hero-title {
+            font-size: 3rem;
+            font-weight: 700;
+            line-height: 1.2;
+            margin-bottom: 1.5rem;
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-subtitle {
+            font-size: 1.25rem;
+            color: var(--secondary-color);
+            line-height: 1.6;
+        }
+
+        .hero-stats {
+            display: flex;
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            line-height: 1;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--secondary-color);
+            font-weight: 500;
+        }
+
+        .hero-image {
+            position: relative;
+            height: 400px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .floating-card {
+            width: 200px;
+            height: 200px;
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            border-radius: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 20px 40px rgba(37, 99, 235, 0.3);
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .floating-card i {
+            font-size: 4rem;
+            color: white;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .feature-card {
+            background: white;
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: var(--card-shadow);
+            transition: all 0.3s ease;
+            border: none;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+        }
+
+        .feature-card:hover {
+            transform: translateY(-8px);
+            box-shadow: var(--card-shadow-hover);
+        }
+
+        .feature-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+            color: white;
+            font-size: 1.5rem;
+        }
+
+        .feature-title {
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #1e293b;
+        }
+
+        .feature-description {
+            color: var(--secondary-color);
+            font-size: 0.9rem;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+
+        .feature-stats {
+            padding: 0.75rem;
+            background: #f8fafc;
+            border-radius: 0.5rem;
+            border-left: 3px solid var(--primary-color);
+        }
+
+        .activity-card, .summary-card, .tips-card {
+            border: none;
+            box-shadow: var(--card-shadow);
+        }
+
+        .activity-timeline {
+            position: relative;
+        }
+
+        .activity-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+
+        .activity-item:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            left: 19px;
+            top: 40px;
+            bottom: -24px;
+            width: 2px;
+            background: #e2e8f0;
+        }
+
+        .activity-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.875rem;
+            margin-right: 1rem;
+            flex-shrink: 0;
+        }
+
+        .activity-title {
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 0.25rem;
+        }
+
+        .activity-description {
+            color: var(--secondary-color);
+            font-size: 0.875rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .activity-time {
+            color: #94a3b8;
+            font-size: 0.75rem;
+        }
+
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .summary-label {
+            color: var(--secondary-color);
+            font-size: 0.875rem;
+        }
+
+        .summary-value {
+            font-weight: 600;
+            font-size: 1.125rem;
+        }
+
+        .tip-content {
+            display: flex;
+            align-items: flex-start;
+            font-size: 0.875rem;
+            line-height: 1.6;
+            color: var(--secondary-color);
+        }
+
+        .empty-state i {
+            opacity: 0.5;
+        }
+
+        @media (max-width: 768px) {
+            .hero-title {
+                font-size: 2rem;
+            }
+            
+            .hero-stats {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .hero-actions {
+                display: flex;
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .hero-actions .btn {
+                width: 100%;
+            }
+            
+            .floating-card {
+                width: 150px;
+                height: 150px;
+            }
+            
+            .floating-card i {
+                font-size: 3rem;
+            }
+        }
+    </style>
+</x-app-layout>

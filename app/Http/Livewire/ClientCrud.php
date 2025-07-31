@@ -21,6 +21,7 @@ class ClientCrud extends Component
 
     public function render()
     {
+       
         return view('livewire.client-crud', [
             'clients' => Client::orderBy('id', 'desc')->paginate(10)
         ]);

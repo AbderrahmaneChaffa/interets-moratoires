@@ -5,11 +5,12 @@
     @if (session()->has('message'))
         <div class="alert alert-success">{{ session('message') }}</div>
     @endif
-    <form wire:submit.prevent="store">
+    <form wire:submit.prevent="store" >
         <div class="mb-3 position-relative">
             <label>Client</label>
-            <input type="text" wire:model="client_search" wire:input="updatedClientSearch" class="form-control"
+            <input type="text" wire:model.debounce.500ms="client_search" class="form-control"
                 placeholder="Rechercher un client..." autocomplete="off">
+
             @if ($showClientDropdown && strlen($client_search) > 0)
                 <ul class="list-group position-absolute w-100" style="z-index:10;">
                     @forelse($clients as $client)
@@ -84,5 +85,14 @@
         </div>
 
         <button type="submit" class="btn btn-success">Créer la facture</button>
+        @if ($errors->any())
+            <div class="alert alert-danger mt-3">
+                <ul class="mb-0">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
     </form>
 </div>

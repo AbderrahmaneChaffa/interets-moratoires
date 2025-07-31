@@ -5,9 +5,11 @@ namespace App\Http\Livewire;
 use Livewire\Component;
 use App\Models\Facture;
 use App\Models\Client;
+use Livewire\WithFileUploads;
 
 class FactureForm extends Component
 {
+    use WithFileUploads;
     public $client_id, $client_search = '', $reference, $date_facture, $montant_ht, $date_depot, $date_reglement, $net_a_payer, $statut_paiement;
     public $clients = [];
     public $showClientDropdown = false;
@@ -40,24 +42,35 @@ class FactureForm extends Component
 
     public function store()
     {
+        logger('Tentative de création de facture', $this->all());
+
         $this->validate();
-         if ($this->facture_pdf) {
-        $pdfPath = $this->facture_pdf->store('factures'); // saved to storage/app/factures/
+
+        try {
+            if ($this->facture_pdf) {
+                $pdfPath = $this->facture_pdf->store('factures','public');;
+            }
+
+            Facture::create([
+                'client_id' => $this->client_id,
+                'reference' => $this->reference,
+                'date_facture' => $this->date_facture,
+                'montant_ht' => $this->montant_ht,
+                'date_depot' => $this->date_depot,
+                'date_reglement' => $this->date_reglement,
+                'net_a_payer' => $this->net_a_payer,
+                'statut_paiement' => $this->statut_paiement,
+                'pdf_path' => $pdfPath ?? null,
+            ]);
+
+            session()->flash('message', 'Facture créée avec succès.');
+            $this->resetFields();
+        } catch (\Exception $e) {
+            logger('Erreur facture : ' . $e->getMessage());
+            session()->flash('message', 'Erreur: ' . $e->getMessage());
+        }
     }
-        Facture::create([
-            'client_id' => $this->client_id,
-            'reference' => $this->reference,
-            'date_facture' => $this->date_facture,
-            'montant_ht' => $this->montant_ht,
-            'date_depot' => $this->date_depot,
-            'date_reglement' => $this->date_reglement,
-            'net_a_payer' => $this->net_a_payer,
-            'statut_paiement' => $this->statut_paiement,
-             'pdf_path' => $pdfPath ?? null,
-        ]);
-        session()->flash('message', 'Facture créée avec succès.');
-        $this->resetFields();
-    }
+
 
     public function resetFields()
     {
