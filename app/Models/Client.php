@@ -14,6 +14,7 @@ class Client extends Model
         'nif',
         'rc',
         'adresse',
+        'email',
     ];
 
     public function factures()
