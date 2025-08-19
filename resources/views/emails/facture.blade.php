@@ -64,8 +64,8 @@
         <div class="facture-number">Facture N° {{ $facture->numero }}</div>
         <p><strong>Date de facturation :</strong> {{ $facture->date_facturation ? $facture->date_facturation->format('d/m/Y') : 'Non définie' }}</p>
         <p><strong>Échéance :</strong> {{ $facture->echeance ? $facture->echeance->format('d/m/Y') : 'Non définie' }}</p>
-        <p><strong>Montant HT :</strong> <span class="amount">{{ number_format($facture->montant_ht, 2, ',', ' ') }} €</span></p>
-        <p><strong>Montant TTC :</strong> <span class="amount">{{ number_format($facture->montant_ttc, 2, ',', ' ') }} €</span></p>
+        <p><strong>Montant HT :</strong> <span class="amount">{{ number_format($facture->montant_ht, 2, ',', ' ') }} DA</span></p>
+        <p><strong>Net à payer :</strong> <span class="amount">{{ number_format($facture->net_a_payer ?? 0, 2, ',', ' ') }} DA</span></p>
         
         @if($facture->statut)
             <p><strong>Statut :</strong> {{ ucfirst($facture->statut) }}</p>

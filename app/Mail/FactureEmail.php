@@ -69,9 +69,20 @@ class FactureEmail extends Mailable
         $attachments = [];
         
         // Ajouter le PDF de la facture s'il existe
-        $pdfPath = storage_path('app/factures/' . $this->facture->id . '.pdf');
-        if (file_exists($pdfPath)) {
-            $attachments[] = Attachment::fromPath($pdfPath)
+        // Si la facture a un chemin PDF stocké via storage public
+        if (!empty($this->facture->pdf_path)) {
+            $publicPath = storage_path('app/public/' . ltrim($this->facture->pdf_path, '/'));
+            if (file_exists($publicPath)) {
+                $attachments[] = Attachment::fromPath($publicPath)
+                    ->as('Facture_' . $this->facture->reference . '.pdf')
+                    ->withMime('application/pdf');
+            }
+        }
+
+        // Fallback legacy path si existait
+        $legacyPath = storage_path('app/factures/' . $this->facture->id . '.pdf');
+        if (file_exists($legacyPath)) {
+            $attachments[] = Attachment::fromPath($legacyPath)
                 ->as('Facture_' . $this->facture->numero . '.pdf')
                 ->withMime('application/pdf');
         }

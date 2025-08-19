@@ -69,12 +69,35 @@
                 <span class="text-danger">{{ $message }}</span>
             @enderror
         </div>
+        
+        
         <div class="mb-3">
-            <label>Statut paiement</label>
-            <input type="text" wire:model.defer="statut_paiement" class="form-control" required>
-            @error('statut_paiement')
+            <label>Statut de la facture</label>
+            <select wire:model.defer="statut" class="form-control" required>
+                @foreach($statuts as $key => $value)
+                    <option value="{{ $key }}">{{ $value }}</option>
+                @endforeach
+            </select>
+            @error('statut')
                 <span class="text-danger">{{ $message }}</span>
             @enderror
+        </div>
+        
+        <div class="mb-3">
+            <label>Délai légal (en jours)</label>
+            <input type="number" wire:model.defer="delai_legal_jours" class="form-control" min="1" max="365" required>
+            @error('delai_legal_jours')
+                <span class="text-danger">{{ $message }}</span>
+            @enderror
+        </div>
+        
+        <div class="mb-3">
+            <div class="form-check">
+                <input type="checkbox" wire:model.defer="calculer_statut_auto" class="form-check-input" id="calculer_statut_auto">
+                <label class="form-check-label" for="calculer_statut_auto">
+                    Calculer automatiquement le statut et les intérêts (si date_depot et date_reglement sont renseignées)
+                </label>
+            </div>
         </div>
         <div class="mb-3">
             <label for="facture_pdf">Joindre un PDF</label>

@@ -4,13 +4,21 @@
     <h2>Liste des factures</h2>
     @if (session()->has('interet'))
         <div class="alert alert-info">
-            <strong>Intérêts moratoires pour la facture #{{ session('interet.facture_id') }} :</strong><br>
-            Jours de retard : {{ session('interet.jours_retards') }}<br>
-            Taux utilisé : {{ session('interet.taux_utilise') }}%<br>
-            Intérêt HT : {{ session('interet.interet_ht') }} DA<br>
-            Intérêt TTC : {{ session('interet.interet_ttc') }} DA
+            <strong>{{ session('interet.message') }}</strong>
         </div>
     @endif
+    
+    @if (session()->has('message'))
+        <div class="alert alert-success">
+            {{ session('message') }}
+        </div>
+    @endif
+    
+    <div class="mb-3">
+        <button wire:click="mettreAJourToutesFactures" class="btn btn-warning">
+            <i class="fas fa-sync-alt"></i> Mettre à jour toutes les factures
+        </button>
+    </div>
     <table class="table table-bordered">
         <thead>
             <tr>
@@ -22,12 +30,13 @@
                 <th>Date dépôt</th>
                 <th>Date règlement</th>
                 <th>Net à payer</th>
-                <th>Statut paiement</th>
+                <th>Statut</th>
+                <th>Intérêts moratoires</th>
                 <th>Actions</th>
             </tr>
         </thead>
         <tbody>
-            @foreach ($factures as $facture)
+            @forelse ($factures as $facture)
                 <tr>
                     <td>{{ $facture->id }}</td>
                     <td>{{ $facture->client->raison_sociale ?? '-' }}</td>
@@ -37,7 +46,23 @@
                     <td>{{ $facture->date_depot }}</td>
                     <td>{{ $facture->date_reglement ?? '-' }}</td>
                     <td>{{ $facture->net_a_payer }}</td>
-                    <td>{{ $facture->statut_paiement }}</td>
+                    <td>
+                        <span class="badge 
+                            @if($facture->statut === 'Payée') bg-success
+                            @elseif($facture->statut === 'Retard de paiement') bg-warning
+                            @elseif($facture->statut === 'Impayée') bg-danger
+                            @else bg-secondary
+                            @endif">
+                            {{ $facture->statut }}
+                        </span>
+                    </td>
+                    <td>
+                        @if($facture->interets > 0)
+                            <span class="text-danger fw-bold">{{ number_format($facture->interets, 2) }} DA</span>
+                        @else
+                            <span class="text-muted">0,00 DA</span>
+                        @endif
+                    </td>
                     <td>
                         <div class="btn-group" role="group">
                             <button wire:click="calculInteret({{ $facture->id }})" class="btn btn-sm btn-info">
@@ -73,7 +98,11 @@
                         </div>
                     </td>
                 </tr>
-            @endforeach
+            @empty
+                <tr>
+                    <td colspan="11" class="text-center">Aucune facture trouvée</td>
+                </tr>
+            @endforelse
         </tbody>
     </table>
     {{ $factures->links() }}

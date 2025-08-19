@@ -23,7 +23,7 @@
                             <div class="stat-label">Factures</div>
                         </div>
                         <div class="stat-item">
-                            <div class="stat-number">{{ number_format($totalInterets ?? 0, 2) }}€</div>
+                            <div class="stat-number">{{ number_format($totalInterets ?? 0, 2) }} DA</div>
                             <div class="stat-label">Intérêts</div>
                         </div>
                     </div>
@@ -206,7 +206,7 @@
                     </div>
                     <div class="summary-item">
                         <div class="summary-label">Intérêts calculés</div>
-                        <div class="summary-value text-success">{{ number_format($monthlyInterests ?? 0, 2) }}€</div>
+                        <div class="summary-value text-success">{{ number_format($monthlyInterests ?? 0, 2) }} DA</div>
                     </div>
                     <div class="summary-item">
                         <div class="summary-label">Nouveaux clients</div>

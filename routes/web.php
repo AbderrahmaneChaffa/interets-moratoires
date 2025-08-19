@@ -6,6 +6,7 @@ use App\Http\Livewire\ClientCrud;
 use App\Http\Livewire\FactureForm;
 use App\Http\Livewire\FactureList;
 use App\Http\Livewire\FactureTable;
+use App\Http\Livewire\RapportInterets;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -44,6 +45,9 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/factures/{facture}/upload-pdf', [FacturePdfController::class, 'upload'])->name('factures.upload_pdf');
     // Envoi d'email pour une facture
     Route::post('/factures/{facture}/send-email', [EmailController::class, 'sendFactureEmail'])->name('factures.send_email');
+
+    // Rapport intérêts par client
+    Route::get('/clients/{client}/rapport-interets', RapportInterets::class)->name('clients.rapport_interets');
 });
 
 /*
