@@ -36,12 +36,11 @@ class FactureSeeder extends Seeder
                 'date_reglement' => Carbon::now()->subDays(25),
                 'net_a_payer' => 13568915.50 * 1.19,
                 'statut' => 'Payée',
-                'interets' => 0.00,
                 'delai_legal_jours' => 30,
-            ])->mettreAJourStatutEtInterets();
+            ])->mettreAJourStatut();
 
-            // 2) impayée avec 65 jours de retard (devrait générer 2 sous-factures)
-            $principale = Facture::create([
+            // 2) impayée avec 65 jours de retard
+            $facture = Facture::create([
                 'client_id' => $client->id,
                 'type' => 'principale',
                 'reference' => 'F-' . $index . '-002',
@@ -52,36 +51,13 @@ class FactureSeeder extends Seeder
                 'date_reglement' => null,
                 'net_a_payer' => 8000000.00 * 1.19,
                 'statut' => 'Impayée',
-                'interets' => 0.00,
                 'delai_legal_jours' => 30,
             ]);
-            $principale->mettreAJourStatutEtInterets();
-
-            // Générer 2 sous-factures d'intérêts
-            $calc = app(\App\Services\InteretService::class)::calculerInterets($principale, (float) ($client->taux ?? 0), (string) ($client->formule ?? ''));
-            for ($m = 1; $m <= 2; $m++) {
-                Facture::create([
-                    'client_id' => $client->id,
-                    'parent_id' => $principale->id,
-                    'type' => 'interet',
-                    'reference' => 'F-' . $index . '-002/INT-' . str_pad($m, 2, '0', STR_PAD_LEFT),
-                    'prestation' => 'Intérêts moratoires',
-                    'date_facture' => Carbon::now()->subDays(30 * (2 - $m)),
-                    'montant_ht' => 0,
-                    'date_depot' => $principale->date_depot,
-                    'date_reglement' => null,
-                    'net_a_payer' => 0,
-                    'statut' => 'En attente',
-                    'delai_legal_jours' => $principale->delai_legal_jours,
-                    'interets_ht' => $calc['interet_ht'],
-                    'interets_ttc' => $calc['interet_ttc'],
-                    'interets' => $calc['interet_ttc'],
-                ]);
-            }
+            $facture->mettreAJourStatut();
 
             $index++;
         }
 
-        $this->command->info('Clients et factures (principales + intérêts) créés avec succès !');
+        $this->command->info('Factures créées avec succès !');
     }
 }

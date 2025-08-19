@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Carbon\Carbon;
 
 class Facture extends Model
 {
@@ -19,9 +20,6 @@ class Facture extends Model
         'net_a_payer',
         'pdf_path',
         'statut',
-        'interets',
-        'interets_ht',
-        'interets_ttc',
         'delai_legal_jours',
     ];
 
@@ -29,9 +27,8 @@ class Facture extends Model
         'date_facture' => 'date',
         'date_depot' => 'date',
         'date_reglement' => 'date',
-        'interets' => 'decimal:2',
-        'interets_ht' => 'decimal:2',
-        'interets_ttc' => 'decimal:2',
+        'montant_ht' => 'decimal:2',
+        'net_a_payer' => 'decimal:2',
     ];
 
     public function client()
@@ -49,38 +46,9 @@ class Facture extends Model
         return $this->hasMany(Facture::class, 'parent_id');
     }
 
-    protected static function booted()
+    public function interets()
     {
-        // Recalcul automatique des intérêts après création/mise à jour
-        static::saved(function (Facture $facture) {
-            if ($facture->relationLoaded('client') || $facture->client) {
-                $facture->client->calculerInterets($facture);
-                $facture->saveQuietly();
-            }
-        });
-    }
-
-    // Relation Interet supprimée car la logique est désormais stockée sur la facture (champ interets)
-
-    /**
-     * Calcule les intérêts moratoires pour cette facture.
-     *
-     * @param int $jours_retards
-     * @param float $taux_annuel (en pourcentage, ex: 6 pour 6%)
-     * @param float $tva (en pourcentage, ex: 19 pour 19%)
-     * @return array [interet_ht, interet_ttc, taux_utilise]
-     */
-    public function calculerInteretsMoratoires($jours_retards, $taux_annuel = 6.0, $tva = 19.0)
-    {
-        $montant_ht = $this->montant_ht;
-        $taux_utilise = $taux_annuel / 100;
-        $interet_ht = ($montant_ht * $taux_utilise * $jours_retards) / 360;
-        $interet_ttc = $interet_ht * (1 + $tva / 100);
-        return [
-            'interet_ht' => round($interet_ht, 2),
-            'interet_ttc' => round($interet_ttc, 2),
-            'taux_utilise' => $taux_annuel
-        ];
+        return $this->hasMany(Interet::class);
     }
 
     /**
@@ -97,7 +65,7 @@ class Facture extends Model
             return $this->statut;
         }
 
-        $date_limite = $this->date_depot->addDays($delai_legal);
+        $date_limite = $this->date_depot->copy()->addDays($delai_legal);
         $aujourd_hui = now();
 
         if ($this->date_reglement) {
@@ -120,61 +88,15 @@ class Facture extends Model
     }
 
     /**
-     * Calcule les intérêts moratoires et les stocke dans la facture.
+     * Met à jour automatiquement le statut.
      *
-     * @param float $taux_annuel (en pourcentage, ex: 6 pour 6%)
-     * @param float $tva (en pourcentage, ex: 19 pour 19%)
-     * @return float Le montant des intérêts calculés
+     * @return string Le statut calculé
      */
-    public function calculerInterets($taux_annuel = 6.0, $tva = 19.0)
-    {
-        if ($this->statut !== 'Retard de paiement' && $this->statut !== 'Impayée') {
-            $this->interets = 0.00;
-            return 0.00;
-        }
-
-        $delai_legal = $this->delai_legal_jours ?? 30;
-        $date_limite = $this->date_depot->addDays($delai_legal);
-        
-        if ($this->date_reglement) {
-            // Calcul basé sur la date de règlement
-            $jours_retards = $this->date_reglement->diffInDays($date_limite);
-        } else {
-            // Calcul basé sur la date actuelle
-            $jours_retards = now()->diffInDays($date_limite);
-        }
-
-        if ($jours_retards <= 0) {
-            $this->interets = 0.00;
-            return 0.00;
-        }
-
-        $resultat = $this->calculerInteretsMoratoires($jours_retards, $taux_annuel, $tva);
-        $this->interets_ht = $resultat['interet_ht'];
-        $this->interets_ttc = $resultat['interet_ttc'];
-        $this->interets = $resultat['interet_ttc'];
-        
-        return $this->interets;
-    }
-
-    /**
-     * Met à jour automatiquement le statut et les intérêts.
-     *
-     * @param float $taux_annuel
-     * @param float $tva
-     * @return array [statut, interets]
-     */
-    public function mettreAJourStatutEtInterets($taux_annuel = 6.0, $tva = 19.0)
+    public function mettreAJourStatut()
     {
         $statut = $this->calculerStatut();
-        $interets = $this->calculerInterets($taux_annuel, $tva);
-        
         $this->save();
-        
-        return [
-            'statut' => $statut,
-            'interets' => $interets
-        ];
+        return $statut;
     }
 
     /**
@@ -190,5 +112,76 @@ class Facture extends Model
             'Retard de paiement' => 'Retard de paiement',
             'Impayée' => 'Impayée'
         ];
+    }
+
+    /**
+     * Formater le montant en DA
+     */
+    public function getMontantHtFormattedAttribute()
+    {
+        return number_format($this->montant_ht, 2, ',', ' ') . ' DA';
+    }
+
+    public function getNetAPayerFormattedAttribute()
+    {
+        return number_format($this->net_a_payer, 2, ',', ' ') . ' DA';
+    }
+
+    /**
+     * Calculer le total des intérêts pour cette facture
+     */
+    public function getTotalInteretsAttribute()
+    {
+        return $this->interets()->sum('interet_ttc');
+    }
+
+    public function getTotalInteretsFormattedAttribute()
+    {
+        return number_format($this->total_interets, 2, ',', ' ') . ' DA';
+    }
+
+    /**
+     * Vérifier si la facture peut générer des intérêts moratoires
+     */
+    public function peutGenererInterets()
+    {
+        if (!$this->date_depot) {
+            return false;
+        }
+
+        $delai_legal = $this->delai_legal_jours ?? 30;
+        $date_limite = $this->date_depot->copy()->addDays($delai_legal);
+        
+        // Si la facture est payée, vérifier si elle a été payée en retard
+        if ($this->date_reglement) {
+            return $this->date_reglement > $date_limite;
+        }
+        
+        // Si la facture n'est pas payée, vérifier si le délai est dépassé
+        return now() > $date_limite;
+    }
+
+    /**
+     * Obtenir le nombre de jours de retard
+     */
+    public function getJoursRetardAttribute()
+    {
+        if (!$this->date_depot) {
+            return 0;
+        }
+
+        $delai_legal = $this->delai_legal_jours ?? 30;
+        $date_limite = $this->date_depot->copy()->addDays($delai_legal);
+        $date_ref = $this->date_reglement ?: now();
+        
+        return max(0, $date_ref->diffInDays($date_limite, false));
+    }
+
+    /**
+     * Obtenir le nombre de mois de retard
+     */
+    public function getMoisRetardAttribute()
+    {
+        return (int) max(0, ceil($this->jours_retard / 30));
     }
 }
