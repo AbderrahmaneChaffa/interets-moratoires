@@ -30,14 +30,14 @@ class Client extends Model
      * Calcule les intérêts pour une facture selon la formule du client.
      * Stocke le résultat (DA) dans $facture->interets sans sauvegarder.
      */
-    public function calculerInterets(Facture $facture): float
-    {
-        $taux = (float) ($this->taux ?? 0);
-        $formule = (string) ($this->formule ?? $this->formule_calcul ?? '');
-        $result = \App\Services\InteretService::calculerInterets($facture, $taux, $formule);
-        $facture->interets_ht = $result['interet_ht'];
-        $facture->interets_ttc = $result['interet_ttc'];
-        $facture->interets = $result['interet_ttc'];
-        return $facture->interets;
-    }
+    // public function calculerInterets(Facture $facture): float
+    // {
+    //     $taux = (float) ($this->taux ?? 0);
+    //     $formule = (string) ($this->formule ?? $this->formule_calcul ?? '');
+    //     $result = \App\Services\InteretService::calculerInterets($facture, $taux, $formule);
+    //     $facture->interets_ht = $result['interet_ht'];
+    //     $facture->interets_ttc = $result['interet_ttc'];
+    //     $facture->interets = $result['interet_ttc'];
+    //     return $facture->interets;
+    // }
 }
