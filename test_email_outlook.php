@@ -34,7 +34,7 @@ try {
     echo "✅ Données de test créées\n";
     echo "📧 Email de destination: ab.chaffa31@gmail.com\n";
     echo "📄 Facture: FACT-2024-001\n";
-    echo "📤 Expéditeur: interet.moratoire@hts-hightechsystems.com\n";
+    echo "📤 Expéditeur: sgp.notification@hts-hightechsystems.com\n";
 
     // Envoyer l'email
     echo "\n🔄 Envoi de l'email en cours...\n";

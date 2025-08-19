@@ -6,50 +6,39 @@
         <div class="alert alert-success">{{ session('message') }}</div>
     @endif
     <form wire:submit.prevent="store" >
-        <div class="mb-3 position-relative">
-            <label>Client</label>
-            <input type="text" wire:model.debounce.500ms="client_search" class="form-control"
-                placeholder="Rechercher un client..." autocomplete="off">
-
-            @if ($showClientDropdown && strlen($client_search) > 0)
-                <ul class="list-group position-absolute w-100" style="z-index:10;">
-                    @forelse($clients as $client)
-                        <li class="list-group-item list-group-item-action"
-                            wire:click="selectClient({{ $client->id }}, '{{ addslashes($client->raison_sociale) }}')">
-                            {{ $client->raison_sociale }} ({{ $client->nif }})
-                        </li>
-                    @empty
-                        <li class="list-group-item">Aucun client trouvé</li>
-                    @endforelse
-                </ul>
-            @endif
-            @error('client_id')
-                <span class="text-danger">{{ $message }}</span>
-            @enderror
+        <div class="mb-3">
+            <label>Client <span class="text-danger">*</span></label>
+            <select class="form-control" wire:model.defer="client_id" required>
+                <option value="">Sélectionner un client</option>
+                @foreach($clients as $c)
+                    <option value="{{ $c->id }}">{{ $c->raison_sociale }} ({{ $c->nif }})</option>
+                @endforeach
+            </select>
+            @error('client_id')<span class="text-danger">{{ $message }}</span>@enderror
         </div>
         <div class="mb-3">
-            <label>Référence</label>
+            <label>Référence <span class="text-danger">*</span></label>
             <input type="text" wire:model.defer="reference" class="form-control" required>
             @error('reference')
                 <span class="text-danger">{{ $message }}</span>
             @enderror
         </div>
         <div class="mb-3">
-            <label>Date facture</label>
+            <label>Date facture <span class="text-danger">*</span></label>
             <input type="date" wire:model.defer="date_facture" class="form-control" required>
             @error('date_facture')
                 <span class="text-danger">{{ $message }}</span>
             @enderror
         </div>
         <div class="mb-3">
-            <label>Montant HT</label>
+            <label>Montant HT <span class="text-danger">*</span></label>
             <input type="number" step="0.01" wire:model.defer="montant_ht" class="form-control" required>
             @error('montant_ht')
                 <span class="text-danger">{{ $message }}</span>
             @enderror
         </div>
         <div class="mb-3">
-            <label>Date dépôt</label>
+            <label>Date dépôt <span class="text-danger">*</span></label>
             <input type="date" wire:model.defer="date_depot" class="form-control" required>
             @error('date_depot')
                 <span class="text-danger">{{ $message }}</span>
@@ -63,7 +52,7 @@
             @enderror
         </div>
         <div class="mb-3">
-            <label>Net à payer</label>
+            <label>Net à payer <span class="text-danger">*</span></label>
             <input type="number" step="0.01" wire:model.defer="net_a_payer" class="form-control" required>
             @error('net_a_payer')
                 <span class="text-danger">{{ $message }}</span>
@@ -72,7 +61,7 @@
         
         
         <div class="mb-3">
-            <label>Statut de la facture</label>
+            <label>Statut de la facture <span class="text-danger">*</span></label>
             <select wire:model.defer="statut" class="form-control" required>
                 @foreach($statuts as $key => $value)
                     <option value="{{ $key }}">{{ $value }}</option>
@@ -84,7 +73,7 @@
         </div>
         
         <div class="mb-3">
-            <label>Délai légal (en jours)</label>
+            <label>Délai légal (en jours) <span class="text-danger">*</span></label>
             <input type="number" wire:model.defer="delai_legal_jours" class="form-control" min="1" max="365" required>
             @error('delai_legal_jours')
                 <span class="text-danger">{{ $message }}</span>

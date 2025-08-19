@@ -65,8 +65,11 @@
                     </td>
                     <td>
                         <div class="btn-group" role="group">
+                            <button wire:click="toggle({{ $facture->id }})" class="btn btn-sm btn-outline-secondary">@if($expandedId === $facture->id) Masquer @else Détails @endif</button>
+                            <button wire:click="openEdit({{ $facture->id }})" class="btn btn-sm btn-warning">Modifier</button>
+                            <button wire:click="deleteParent({{ $facture->id }})" class="btn btn-sm btn-danger" onclick="return confirm('Supprimer cette facture et ses sous-factures ?')">Supprimer</button>
                             <button wire:click="calculInteret({{ $facture->id }})" class="btn btn-sm btn-info">
-                                <i class="fas fa-calculator"></i> Calcul intérêt
+                                <i class="fas fa-calculator"></i> Recalcul
                             </button>
                             
                             @if ($facture->pdf_path)
@@ -98,6 +101,41 @@
                         </div>
                     </td>
                 </tr>
+                @if($expandedId === $facture->id)
+                    <tr>
+                        <td colspan="11">
+                            <div class="p-3 bg-light border rounded">
+                                <h6 class="mb-2">Sous-factures d'intérêts</h6>
+                                @if($facture->sousFactures->isEmpty())
+                                    <div class="text-muted">Aucune sous-facture</div>
+                                @else
+                                    <table class="table table-sm">
+                                        <thead>
+                                            <tr>
+                                                <th>Référence</th>
+                                                <th>Date</th>
+                                                <th>Intérêts HT</th>
+                                                <th>Intérêts TTC</th>
+                                                <th>Statut</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach($facture->sousFactures as $sf)
+                                                <tr>
+                                                    <td>{{ $sf->reference }}</td>
+                                                    <td>{{ optional($sf->date_facture)->format('d-m-Y') }}</td>
+                                                    <td>DA {{ number_format($sf->interets_ht ?? 0, 2, ',', ' ') }}</td>
+                                                    <td>DA {{ number_format($sf->interets_ttc ?? 0, 2, ',', ' ') }}</td>
+                                                    <td>{{ $sf->statut }}</td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                @endif
+                            </div>
+                        </td>
+                    </tr>
+                @endif
             @empty
                 <tr>
                     <td colspan="11" class="text-center">Aucune facture trouvée</td>

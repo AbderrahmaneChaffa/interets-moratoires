@@ -10,7 +10,7 @@ use Livewire\WithFileUploads;
 class FactureForm extends Component
 {
     use WithFileUploads;
-    public $client_id, $client_search = '', $reference, $date_facture, $montant_ht, $date_depot, $date_reglement, $net_a_payer;
+    public $client_id, $client_search = '', $reference, $prestation, $date_facture, $montant_ht, $date_depot, $date_reglement, $net_a_payer;
     public $statut, $delai_legal_jours = 30;
     public $clients = [];
     public $showClientDropdown = false;
@@ -20,6 +20,7 @@ class FactureForm extends Component
     protected $rules = [
         'client_id' => 'required|exists:clients,id',
         'reference' => 'required|string|max:255',
+        'prestation' => 'nullable|string|max:255',
         'date_facture' => 'required|date',
         'montant_ht' => 'required|numeric',
         'date_depot' => 'required|date',
@@ -43,6 +44,12 @@ class FactureForm extends Component
         $this->showClientDropdown = false;
     }
 
+    public function mount()
+    {
+        // Charger la liste des clients au chargement du composant
+        $this->clients = Client::orderBy('raison_sociale')->get();
+    }
+
     public function store()
     {
         logger('Tentative de création de facture', $this->all());
@@ -58,6 +65,8 @@ class FactureForm extends Component
             $facture = Facture::create([
                 'client_id' => $this->client_id,
                 'reference' => $this->reference,
+                'prestation' => $this->prestation,
+                'type' => 'principale',
                 'date_facture' => $this->date_facture,
                 'montant_ht' => $this->montant_ht,
                 'date_depot' => $this->date_depot,
@@ -92,6 +101,7 @@ class FactureForm extends Component
         $this->client_id = null;
         $this->client_search = '';
         $this->reference = '';
+        $this->prestation = '';
         $this->date_facture = '';
         $this->montant_ht = '';
         $this->date_depot = '';
@@ -100,13 +110,16 @@ class FactureForm extends Component
         $this->statut = 'En attente';
         $this->delai_legal_jours = 30;
         $this->calculer_statut_auto = true;
-        $this->clients = [];
+        // Recharger la liste des clients après création
+        $this->clients = Client::orderBy('raison_sociale')->get();
         $this->showClientDropdown = false;
     }
 
     public function render()
     {
         $statuts = Facture::getStatutsDisponibles();
-        return view('livewire.facture-form', compact('statuts'));
+        $clients = Client::orderBy('raison_sociale')->get();
+       // dd($clients);
+        return view('livewire.facture-form', compact('statuts','clients'));
     }
 }

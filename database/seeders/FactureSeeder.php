@@ -21,72 +21,67 @@ class FactureSeeder extends Seeder
             return;
         }
 
-        // Facture payée à temps
-        Facture::create([
-            'client_id' => $clients->first()->id,
-            'reference' => 'FACT-2024-001',
-            'date_facture' => Carbon::now()->subDays(60),
-            'montant_ht' => 1500.00,
-            'date_depot' => Carbon::now()->subDays(50),
-            'date_reglement' => Carbon::now()->subDays(20),
-            'net_a_payer' => 1785.00,
-            // 'statut_paiement' supprimé
-            'statut' => 'Payée',
-            'interets' => 0.00,
-            'delai_legal_jours' => 30,
-        ]);
+        // Créer des factures tests pour les 5 premiers clients
+        $index = 1;
+        foreach ($clients->take(5) as $client) {
+            // 1) payée à temps
+            Facture::create([
+                'client_id' => $client->id,
+                'type' => 'principale',
+                'reference' => 'F-' . $index . '-001',
+                'prestation' => 'Maintenance GAB',
+                'date_facture' => Carbon::now()->subDays(60),
+                'montant_ht' => 13568915.50,
+                'date_depot' => Carbon::now()->subDays(59),
+                'date_reglement' => Carbon::now()->subDays(25),
+                'net_a_payer' => 13568915.50 * 1.19,
+                'statut' => 'Payée',
+                'interets' => 0.00,
+                'delai_legal_jours' => 30,
+            ])->mettreAJourStatutEtInterets();
 
-        // Facture en retard de paiement
-        Facture::create([
-            'client_id' => $clients->first()->id,
-            'reference' => 'FACT-2024-002',
-            'date_facture' => Carbon::now()->subDays(80),
-            'montant_ht' => 2500.00,
-            'date_depot' => Carbon::now()->subDays(70),
-            'date_reglement' => Carbon::now()->subDays(10),
-            'net_a_payer' => 2975.00,
-            // 'statut_paiement' supprimé
-            'statut' => 'Retard de paiement',
-            'interets' => 0.00, // Sera calculé automatiquement
-            'delai_legal_jours' => 30,
-        ]);
+            // 2) impayée avec 65 jours de retard (devrait générer 2 sous-factures)
+            $principale = Facture::create([
+                'client_id' => $client->id,
+                'type' => 'principale',
+                'reference' => 'F-' . $index . '-002',
+                'prestation' => 'Maintenance Contrat',
+                'date_facture' => Carbon::now()->subDays(90),
+                'montant_ht' => 8000000.00,
+                'date_depot' => Carbon::now()->subDays(85),
+                'date_reglement' => null,
+                'net_a_payer' => 8000000.00 * 1.19,
+                'statut' => 'Impayée',
+                'interets' => 0.00,
+                'delai_legal_jours' => 30,
+            ]);
+            $principale->mettreAJourStatutEtInterets();
 
-        // Facture impayée
-        Facture::create([
-            'client_id' => $clients->first()->id,
-            'reference' => 'FACT-2024-003',
-            'date_facture' => Carbon::now()->subDays(90),
-            'montant_ht' => 3000.00,
-            'date_depot' => Carbon::now()->subDays(80),
-            'date_reglement' => null,
-            'net_a_payer' => 3570.00,
-            // 'statut_paiement' supprimé
-            'statut' => 'Impayée',
-            'interets' => 0.00, // Sera calculé automatiquement
-            'delai_legal_jours' => 30,
-        ]);
+            // Générer 2 sous-factures d'intérêts
+            $calc = app(\App\Services\InteretService::class)::calculerInterets($principale, (float) ($client->taux ?? 0), (string) ($client->formule ?? ''));
+            for ($m = 1; $m <= 2; $m++) {
+                Facture::create([
+                    'client_id' => $client->id,
+                    'parent_id' => $principale->id,
+                    'type' => 'interet',
+                    'reference' => 'F-' . $index . '-002/INT-' . str_pad($m, 2, '0', STR_PAD_LEFT),
+                    'prestation' => 'Intérêts moratoires',
+                    'date_facture' => Carbon::now()->subDays(30 * (2 - $m)),
+                    'montant_ht' => 0,
+                    'date_depot' => $principale->date_depot,
+                    'date_reglement' => null,
+                    'net_a_payer' => 0,
+                    'statut' => 'En attente',
+                    'delai_legal_jours' => $principale->delai_legal_jours,
+                    'interets_ht' => $calc['interet_ht'],
+                    'interets_ttc' => $calc['interet_ttc'],
+                    'interets' => $calc['interet_ttc'],
+                ]);
+            }
 
-        // Facture en attente
-        Facture::create([
-            'client_id' => $clients->first()->id,
-            'reference' => 'FACT-2024-004',
-            'date_facture' => Carbon::now()->subDays(20),
-            'montant_ht' => 800.00,
-            'date_depot' => Carbon::now()->subDays(15),
-            'date_reglement' => null,
-            'net_a_payer' => 952.00,
-            // 'statut_paiement' supprimé
-            'statut' => 'En attente',
-            'interets' => 0.00,
-            'delai_legal_jours' => 30,
-        ]);
-
-        // Mettre à jour les intérêts pour toutes les factures
-        $factures = Facture::all();
-        foreach ($factures as $facture) {
-            $facture->mettreAJourStatutEtInterets();
+            $index++;
         }
 
-        $this->command->info('Factures créées avec succès !');
+        $this->command->info('Clients et factures (principales + intérêts) créés avec succès !');
     }
 }

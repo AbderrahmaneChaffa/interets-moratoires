@@ -10,7 +10,7 @@ class Facture extends Model
     use HasFactory;
 
     protected $fillable = [
-        'client_id',
+        'client_id', 'parent_id', 'type', 'prestation',
         'reference',
         'date_facture',
         'montant_ht',
@@ -37,6 +37,16 @@ class Facture extends Model
     public function client()
     {
         return $this->belongsTo(Client::class);
+    }
+
+    public function parent()
+    {
+        return $this->belongsTo(Facture::class, 'parent_id');
+    }
+
+    public function sousFactures()
+    {
+        return $this->hasMany(Facture::class, 'parent_id');
     }
 
     protected static function booted()
