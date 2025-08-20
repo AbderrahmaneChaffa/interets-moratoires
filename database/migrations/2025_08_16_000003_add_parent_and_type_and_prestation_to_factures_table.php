@@ -9,7 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('factures', function (Blueprint $table) {
-            $table->unsignedBigInteger('parent_id')->nullable()->after('client_id');
+            $table->unsignedBigInteger('parent_id')->nullable()->after(column: 'client_id');
             $table->string('type')->default('principale')->after('parent_id'); // 'principale' | 'interet'
             $table->string('prestation')->nullable()->after('reference');
 
@@ -20,7 +20,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('factures', function (Blueprint $table) {
-            $table->dropForeign(['parent_id']);
+            $table->dropForeign(index: ['parent_id']);
             $table->dropColumn(['parent_id','type','prestation']);
         });
     }

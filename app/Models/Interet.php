@@ -12,11 +12,14 @@ class Interet extends Model
 
     protected $fillable = [
         'facture_id',
+        'reference',    
         'date_debut_periode',
         'date_fin_periode',
+        'statut',
         'jours_retard',
         'interet_ht',
-        'interet_ttc'
+        'interet_ttc',
+        'pdf_path'
     ];
 
     protected $casts = [

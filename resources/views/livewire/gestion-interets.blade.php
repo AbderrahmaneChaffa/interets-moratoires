@@ -1,5 +1,5 @@
 <div>
-    @if($facture)
+    @if ($facture)
         <div class="card">
             <div class="card-header">
                 <h5 class="mb-0">
@@ -13,25 +13,49 @@
                     <div class="col-md-6">
                         <h6>Informations de la facture</h6>
                         <table class="table table-sm">
-                            <tr><td><strong>Client:</strong></td><td>{{ $facture->client->raison_sociale }}</td></tr>
-                            <tr><td><strong>Montant HT:</strong></td><td>{{ $facture->montant_ht_formatted }}</td></tr>
-                            <tr><td><strong>Date dépôt:</strong></td><td>{{ $facture->date_depot ? $facture->date_depot->format('d/m/Y') : '-' }}</td></tr>
-                            <tr><td><strong>Délai légal:</strong></td><td>{{ $facture->delai_legal_jours ?? 30 }} jours</td></tr>
+                            <tr>
+                                <td><strong>Client:</strong></td>
+                                <td>{{ $facture->client->raison_sociale }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Montant HT:</strong></td>
+                                <td>{{ $facture->montant_ht_formatted }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Date dépôt:</strong></td>
+                                <td>{{ $facture->date_depot ? $facture->date_depot->format('d/m/Y') : '-' }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Délai légal:</strong></td>
+                                <td>{{ $facture->delai_legal_jours ?? 30 }} jours</td>
+                            </tr>
                         </table>
                     </div>
                     <div class="col-md-6">
                         <h6>Calcul des intérêts</h6>
                         <table class="table table-sm">
-                            <tr><td><strong>Jours de retard:</strong></td><td>{{ $facture->jours_retard }}</td></tr>
-                            <tr><td><strong>Mois de retard:</strong></td><td>{{ $facture->mois_retard }}</td></tr>
-                            <tr><td><strong>Taux client:</strong></td><td>{{ $facture->client->taux ?? 0 }}%</td></tr>
-                            <tr><td><strong>Formule:</strong></td><td>{{ $facture->client->formule ?? 'Standard' }}</td></tr>
+                            <tr>
+                                <td><strong>Jours de retard:</strong></td>
+                                <td>{{ $facture->jours_retard }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Mois de retard:</strong></td>
+                                <td>{{ $facture->mois_retard }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Taux client:</strong></td>
+                                <td>{{ $facture->client->taux ?? 0 }}%</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Formule:</strong></td>
+                                <td>{{ $facture->client->formule ?? 'Standard' }}</td>
+                            </tr>
                         </table>
                     </div>
                 </div>
 
                 <!-- Bouton calculer tous les intérêts -->
-                @if($facture->peutGenererInterets())
+                @if ($facture->peutGenererInterets())
                     <div class="mb-3">
                         <button wire:click="calculerInteret({{ $facture->id }})" class="btn btn-primary">
                             <i class="fas fa-calculator"></i> Calculer tous les intérêts
@@ -44,7 +68,7 @@
                 @endif
 
                 <!-- Périodes d'intérêts -->
-                @if(count($periodesInterets) > 0)
+                @if (count($periodesInterets) > 0)
                     <div class="table-responsive">
                         <table class="table table-striped">
                             <thead class="table-dark">
@@ -60,40 +84,44 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach($periodesInterets as $periode)
+                                @foreach ($periodesInterets as $periode)
                                     <tr>
                                         <td>{{ $periode['mois'] }}</td>
                                         <td>{{ $periode['date_debut_periode']->format('m/Y') }}</td>
                                         <td>{{ $periode['date_debut_periode']->format('d/m/Y') }}</td>
                                         <td>{{ $periode['date_fin_periode']->format('d/m/Y') }}</td>
-                                        <td>{{ $periode['interet_existant'] ? $periode['interet_existant']->jours_retard : '-' }}</td>
+                                        <td>{{ $periode['interet_existant'] ? $periode['interet_existant']->jours_retard : '-' }}
+                                        </td>
                                         <td class="text-end">
-                                            @if($periode['interet_existant'])
+                                            @if ($periode['interet_existant'])
                                                 {{ $periode['interet_existant']->interet_ht_formatted }}
                                             @else
                                                 <span class="text-muted">-</span>
                                             @endif
                                         </td>
                                         <td class="text-end">
-                                            @if($periode['interet_existant'])
+                                            @if ($periode['interet_existant'])
                                                 {{ $periode['interet_existant']->interet_ttc_formatted }}
                                             @else
                                                 <span class="text-muted">-</span>
                                             @endif
                                         </td>
                                         <td>
-                                            @if($periode['peut_calculer'])
-                                                <button wire:click="calculerInteretPeriode('{{ $periode['date_debut_periode']->format('Y-m-d') }}', '{{ $periode['date_fin_periode']->format('Y-m-d') }}')" 
-                                                        class="btn btn-sm btn-success" title="Calculer">
+                                            @if ($periode['peut_calculer'])
+                                                <button
+                                                    wire:click="calculerInteretPeriode('{{ $periode['date_debut_periode']->format('Y-m-d') }}', '{{ $periode['date_fin_periode']->format('Y-m-d') }}')"
+                                                    class="btn btn-sm btn-success" title="Calculer">
                                                     <i class="fas fa-calculator"></i>
                                                 </button>
                                             @else
-                                                <button class="btn btn-sm btn-secondary" disabled title="Intérêt déjà calculé">
+                                                <button class="btn btn-sm btn-secondary" disabled
+                                                    title="Intérêt déjà calculé">
                                                     <i class="fas fa-check"></i>
                                                 </button>
-                                                <button wire:click="supprimerInteret({{ $periode['interet_existant']->id }})" 
-                                                        class="btn btn-sm btn-danger" title="Supprimer"
-                                                        onclick="return confirm('Êtes-vous sûr de vouloir supprimer cet intérêt ?')">
+                                                <button
+                                                    wire:click="supprimerInteret({{ $periode['interet_existant']->id }})"
+                                                    class="btn btn-sm btn-danger" title="Supprimer"
+                                                    onclick="return confirm('Êtes-vous sûr de vouloir supprimer cet intérêt ?')">
                                                     <i class="fas fa-trash"></i>
                                                 </button>
                                             @endif
@@ -105,17 +133,23 @@
                     </div>
 
                     <!-- Total des intérêts -->
-                    @if($facture->interets->count() > 0)
+                    @if ($facture->interets->count() > 0)
                         <div class="row mt-3">
                             <div class="col-md-6 offset-md-6">
                                 <table class="table table-sm table-bordered">
                                     <tr class="table-warning">
                                         <td><strong>Total intérêts HT:</strong></td>
-                                        <td class="text-end"><strong>{{ InteretService::formaterMontant($facture->interets->sum('interet_ht')) }}</strong></td>
+                                        <td class="text-end">
+                                            <strong>{{ \App\Services\InteretService::formaterMontant($facture->interets->sum('interet_ht')) }}
+                                            </strong>
+                                        </td>
                                     </tr>
                                     <tr class="table-danger">
                                         <td><strong>Total intérêts TTC:</strong></td>
-                                        <td class="text-end"><strong>{{ InteretService::formaterMontant($facture->interets->sum('interet_ttc')) }}</strong></td>
+                                        <td class="text-end">
+                                            <strong>{{ \App\Services\InteretService::formaterMontant($facture->interets->sum('interet_ttc')) }}
+                                            </strong>
+                                        </td>
                                     </tr>
                                 </table>
                             </div>

@@ -36,15 +36,7 @@ class Facture extends Model
         return $this->belongsTo(Client::class);
     }
 
-    public function parent()
-    {
-        return $this->belongsTo(Facture::class, 'parent_id');
-    }
-
-    public function sousFactures()
-    {
-        return $this->hasMany(Facture::class, 'parent_id');
-    }
+  
 
     public function interets()
     {
@@ -107,9 +99,7 @@ class Facture extends Model
     public static function getStatutsDisponibles()
     {
         return [
-            //'En attente' => 'En attente',
             'Payée' => 'Payée',
-            //'Retard de paiement' => 'Retard de paiement',
             'Impayée' => 'Impayée'
         ];
     }
@@ -173,8 +163,9 @@ class Facture extends Model
         $delai_legal = $this->delai_legal_jours ?? 30;
         $date_limite = $this->date_depot->copy()->addDays($delai_legal);
         $date_ref = $this->date_reglement ?: now();
-        
-        return max(0, $date_ref->diffInDays($date_limite, false));
+        return max(0, $date_limite->diffInDays($date_ref, false));
+
+        // return max(0, $date_ref->diffInDays($date_limite, false));
     }
 
     /**

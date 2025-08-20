@@ -53,8 +53,7 @@ class FactureList extends Component
 
     public function render()
     {
-        $query = Facture::with(['client', 'interets'])
-            ->where('type', 'principale');
+        $query = Facture::with(['client', 'interets']);
 
         // Filtres
         if (!empty($this->selectedClient)) {
