@@ -78,7 +78,7 @@ class FactureList extends Component
 
         $factures = $query->orderBy('date_facture', 'desc')->paginate(15);
         $clients = Client::orderBy('raison_sociale')->get();
-        
+
         return view('livewire.facture-list', compact('factures', 'clients'));
     }
 
@@ -97,6 +97,8 @@ class FactureList extends Component
     {
         $this->factureDetails = Facture::with(['client', 'interets'])->findOrFail($id);
         $this->showDetailsModal = true;
+        $this->dispatchBrowserEvent('open-facture-details');
+
     }
 
     public function openEdit($id)
@@ -112,7 +114,9 @@ class FactureList extends Component
         $this->net_a_payer = $f->net_a_payer;
         $this->statut = $f->statut;
         $this->delai_legal_jours = $f->delai_legal_jours ?? 30;
-        $this->showModal = true;
+         $this->showModal = true;
+        $this->dispatchBrowserEvent('open-facture-modal');
+
     }
 
     public function save()
@@ -132,15 +136,23 @@ class FactureList extends Component
         ]);
         $f->mettreAJourStatut();
         $this->showModal = false;
+        // ferme le modal d’édition
+        $this->dispatchBrowserEvent('close-facture-modal');
         session()->flash('message', 'Facture mise à jour avec succès.');
     }
 
     public function confirmDelete($id)
     {
         $this->facture_id = $id;
-        $this->showDeleteModal = true;
-    }
+        $this->dispatchBrowserEvent('open-facture-delete');
 
+         $this->showDeleteModal = true;
+    }
+    public function closeDetails()
+    {
+        $this->factureDetails = null;
+        $this->dispatchBrowserEvent('close-facture-details');
+    }
     public function delete()
     {
         $f = Facture::findOrFail($this->facture_id);
@@ -149,21 +161,23 @@ class FactureList extends Component
             return;
         }
         $f->delete();
-        $this->showDeleteModal = false;
+         $this->showDeleteModal = false;
+        $this->dispatchBrowserEvent('close-facture-delete');
+
         session()->flash('message', 'Facture supprimée avec succès.');
     }
 
     public function calculerInteret($factureId)
     {
         $facture = Facture::with('client')->findOrFail($factureId);
-        
+
         if (!$facture->peutGenererInterets()) {
             session()->flash('error', 'Cette facture ne peut pas générer d\'intérêts moratoires.');
             return;
         }
 
         $interetsCrees = InteretService::calculerEtSauvegarderTousInterets($facture);
-        
+
         if (empty($interetsCrees)) {
             session()->flash('info', 'Tous les intérêts pour cette facture ont déjà été calculés.');
         } else {
@@ -176,9 +190,9 @@ class FactureList extends Component
         $facture = Facture::with('client')->findOrFail($factureId);
         $dateDebut = \Carbon\Carbon::parse($dateDebut);
         $dateFin = \Carbon\Carbon::parse($dateFin);
-        
+
         $interet = InteretService::calculerEtSauvegarderInterets($facture, $dateDebut, $dateFin);
-        
+
         if ($interet) {
             session()->flash('message', 'Intérêt calculé et sauvegardé pour cette période.');
         } else {
