@@ -16,10 +16,12 @@ class InteretService
         if (!$facture->date_depot) {
             return 0;
         }
+
         $delai = $facture->delai_legal_jours ?? 30;
         $dateLimite = $facture->date_depot->copy()->addDays($delai);
         $dateRef = $facture->date_reglement ?: now();
-        return max(0, $dateRef->diffInDays($dateLimite, false));
+
+        return max(0, $dateLimite->diffInDays($dateRef, false));
     }
 
     /**
@@ -32,23 +34,39 @@ class InteretService
     }
 
     /**
-     * Calculer les intérêts pour une période donnée
+     * Calculer les intérêts selon le client
      */
-    public static function calculerInteretsPourPeriode(Facture $facture, Carbon $dateDebut, Carbon $dateFin, float $taux, string $formule): array
+    public static function calculerInteretsPourPeriode(Facture $facture, Carbon $dateDebut, Carbon $dateFin): array
     {
+        $client = strtoupper($facture->client->raison_sociale);
         $montant = (float) $facture->montant_ht;
         $joursRetard = $dateFin->diffInDays($dateDebut);
-        
+       //$moisRetard = self::calculerMoisRetard($facture);
+
         $interet_ht = 0.0;
-        if (stripos($formule, 'jours') !== false) {
-            // (Montant × Jours × Taux) / 360
-            $interet_ht = ($montant * $joursRetard * $taux) / 360.0;
-        } elseif (stripos($formule, 'mois') !== false) {
-            // (Montant × Taux × 1 mois)
-            $interet_ht = $montant * $taux;
-        } else {
-            // Par défaut: jours/360
-            $interet_ht = ($montant * $joursRetard * $taux) / 360.0;
+
+        switch (true) {
+            case str_contains($client, 'ALGERIE POSTE'):
+                // (Montant × Jours × 9%) / 360
+                $interet_ht = ($montant * $joursRetard * 0.09) / 360.0;
+                break;
+
+            case str_contains($client, 'CPA'):
+                // (Montant × 5% × Mois)
+                $interet_ht = $montant * 0.05 * 1;
+                break;
+
+            case str_contains($client, 'BNA'):
+            case str_contains($client, 'BDL'):
+            case str_contains($client, 'CNEP'):
+                // (Montant × 10% × Mois)
+                $interet_ht = $montant * 0.10 * 1;
+                break;
+
+            default:
+                // fallback = jours/360 avec taux générique
+                $taux = (float) ($facture->client->taux ?? 0.1);
+                $interet_ht = ($montant * $joursRetard * $taux) / 360.0;
         }
 
         $interet_ht = round($interet_ht, 2);
@@ -56,13 +74,14 @@ class InteretService
 
         return [
             'jours_retard' => $joursRetard,
+            'mois_retard' => 1,
             'interet_ht' => $interet_ht,
             'interet_ttc' => $interet_ttc,
         ];
     }
 
     /**
-     * Générer les périodes d'intérêts pour une facture
+     * Générer les périodes d'intérêts (utile pour CPA, BNA, BDL, CNEP)
      */
     public static function genererPeriodesInterets(Facture $facture): array
     {
@@ -72,26 +91,26 @@ class InteretService
 
         $delai = $facture->delai_legal_jours ?? 30;
         $dateDebutGrace = $facture->date_depot->copy()->addDays($delai);
-        $moisRetard = $facture->mois_retard;
-        
+        $moisRetard = self::calculerMoisRetard($facture);
+
         $periodes = [];
-        
+
         for ($mois = 1; $mois <= $moisRetard; $mois++) {
             $dateDebutPeriode = $dateDebutGrace->copy()->addMonths($mois - 1);
             $dateFinPeriode = $dateDebutPeriode->copy()->addMonth();
-            
-            // Si la facture est payée, ajuster la date de fin
+
+            // Si facture payée avant la fin de la période → couper
             if ($facture->date_reglement && $dateFinPeriode > $facture->date_reglement) {
                 $dateFinPeriode = $facture->date_reglement;
             }
-            
+
             $periodes[] = [
                 'mois' => $mois,
                 'date_debut_periode' => $dateDebutPeriode,
                 'date_fin_periode' => $dateFinPeriode,
             ];
         }
-        
+
         return $periodes;
     }
 
@@ -100,21 +119,12 @@ class InteretService
      */
     public static function calculerEtSauvegarderInterets(Facture $facture, Carbon $dateDebut, Carbon $dateFin): ?Interet
     {
-        // Vérifier si l'intérêt existe déjà pour cette période
         if (Interet::existsForPeriod($facture->id, $dateDebut, $dateFin)) {
             return null;
         }
 
-        $client = $facture->client;
-        $taux = (float) ($client->taux ?? 0);
-        $formule = (string) ($client->formule ?? '');
-        
-        if ($taux <= 0) {
-            return null;
-        }
+        $resultat = self::calculerInteretsPourPeriode($facture, $dateDebut, $dateFin);
 
-        $resultat = self::calculerInteretsPourPeriode($facture, $dateDebut, $dateFin, $taux, $formule);
-        
         return Interet::create([
             'facture_id' => $facture->id,
             'date_debut_periode' => $dateDebut,
@@ -132,19 +142,19 @@ class InteretService
     {
         $periodes = self::genererPeriodesInterets($facture);
         $interetsCrees = [];
-        
+
         foreach ($periodes as $periode) {
             $interet = self::calculerEtSauvegarderInterets(
-                $facture, 
-                $periode['date_debut_periode'], 
+                $facture,
+                $periode['date_debut_periode'],
                 $periode['date_fin_periode']
             );
-            
+
             if ($interet) {
                 $interetsCrees[] = $interet;
             }
         }
-        
+
         return $interetsCrees;
     }
 
@@ -155,13 +165,13 @@ class InteretService
     {
         $periodes = self::genererPeriodesInterets($facture);
         $resultat = [];
-        
+
         foreach ($periodes as $periode) {
             $interetExistant = Interet::where('facture_id', $facture->id)
                 ->where('date_debut_periode', $periode['date_debut_periode'])
                 ->where('date_fin_periode', $periode['date_fin_periode'])
                 ->first();
-            
+
             $resultat[] = [
                 'mois' => $periode['mois'],
                 'date_debut_periode' => $periode['date_debut_periode'],
@@ -170,7 +180,7 @@ class InteretService
                 'peut_calculer' => !$interetExistant,
             ];
         }
-        
+
         return $resultat;
     }
 

@@ -195,9 +195,10 @@
                         sur {{ $factures->total() }} facture(s)
                     </p>
                 </div>
-                <div>
-                    {{ $factures->links() }}
+                <div class="mt-4">
+                    {{ $factures->links('pagination::bootstrap-5') }}
                 </div>
+
             </div>
         </div>
     </div>
