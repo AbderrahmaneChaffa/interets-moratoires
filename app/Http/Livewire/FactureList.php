@@ -10,6 +10,8 @@ use App\Services\InteretService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\FacturesExport;
+use Illuminate\Support\Facades\Mail;
+
 
 class FactureList extends Component
 {
@@ -29,6 +31,14 @@ class FactureList extends Component
     public $showDetailsModal = false;
     public $showDeleteModal = false;
     public $factureDetails = null;
+    
+    public $showEmailModal = false;
+    public $selectedFacture = null;
+    public $emailDestinataire = '';
+    public $emailObjet = '';
+    public $emailMessage = '';
+    public $attachFacturePdf = true;
+    public $attachInteretsPdf = [];
 
     protected $rules = [
         'reference' => 'required|string|max:255',
@@ -92,6 +102,97 @@ class FactureList extends Component
         $this->expandedId = $this->expandedId === $id ? null : $id;
     }
 
+
+    public function openEmailModal($factureId)
+    {
+        $this->selectedFacture = Facture::with(['client', 'interets'])->find($factureId);
+        
+        if ($this->selectedFacture) {
+            // Pré-remplir les champs
+            $this->emailDestinataire = $this->selectedFacture->client->email ?? '';
+            $this->emailObjet = "Facture {$this->selectedFacture->reference}";
+            $this->emailMessage = "Bonjour,\n\nVeuillez trouver ci-joint la facture {$this->selectedFacture->reference}.\n\nCordialement,";
+            
+            // Cocher par défaut la facture PDF si elle existe
+            $this->attachFacturePdf = (bool) $this->selectedFacture->pdf_path;
+            $this->attachInteretsPdf = [];
+            
+            $this->showEmailModal = true;
+            $this->dispatchBrowserEvent('open-facture-email');
+
+        }
+    }
+
+    public function closeEmailModal()
+    {
+        $this->showEmailModal = false;
+        $this->selectedFacture = null;
+        $this->emailDestinataire = '';
+        $this->emailObjet = '';
+        $this->emailMessage = '';
+        $this->attachFacturePdf = true;
+        $this->attachInteretsPdf = [];
+        $this->dispatchBrowserEvent('close-facture-email');
+
+    }
+
+    public function sendEmail()
+    {
+        $this->validate([
+            'emailDestinataire' => 'required|email',
+            'emailObjet' => 'required|string|max:255',
+            'emailMessage' => 'nullable|string',
+        ], [
+            'emailDestinataire.required' => 'L\'email destinataire est obligatoire.',
+            'emailDestinataire.email' => 'L\'email destinataire doit être valide.',
+            'emailObjet.required' => 'L\'objet est obligatoire.',
+        ]);
+
+        try {
+            $attachments = [];
+            
+            // Ajouter la facture PDF si sélectionnée
+            if ($this->attachFacturePdf && $this->selectedFacture->pdf_path) {
+                $attachments[] = [
+                    'path' => storage_path('app/public/' . $this->selectedFacture->pdf_path),
+                    'name' => "Facture_{$this->selectedFacture->reference}.pdf"
+                ];
+            }
+            
+            // Ajouter les PDFs d'intérêts sélectionnés
+            if (!empty($this->attachInteretsPdf)) {
+                foreach ($this->selectedFacture->interets->whereIn('id', $this->attachInteretsPdf) as $interet) {
+                    if ($interet->pdf_path) {
+                        $attachments[] = [
+                            'path' => storage_path('app/public/' . $interet->pdf_path),
+                            'name' => "Interets_{$this->selectedFacture->reference}_{$interet->date_debut_periode->format('m_Y')}.pdf"
+                        ];
+                    }
+                }
+            }
+
+            // Envoyer l'email (vous devrez créer une classe Mail appropriée)
+            Mail::send('emails.facture', [
+                'facture' => $this->selectedFacture,
+                'message' => $this->emailMessage,
+            ], function ($mail) use ($attachments) {
+                $mail->to($this->emailDestinataire)
+                     ->subject($this->emailObjet);
+                
+                foreach ($attachments as $attachment) {
+                    if (file_exists($attachment['path'])) {
+                        $mail->attach($attachment['path'], ['as' => $attachment['name']]);
+                    }
+                }
+            });
+
+            session()->flash('message', 'Email envoyé avec succès à ' . $this->emailDestinataire);
+            $this->closeEmailModal();
+            
+        } catch (\Exception $e) {
+            session()->flash('error', 'Erreur lors de l\'envoi de l\'email: ' . $e->getMessage());
+        }
+    }
     public function showDetails($id)
     {
         $this->factureDetails = Facture::with(['client', 'interets'])->findOrFail($id);
