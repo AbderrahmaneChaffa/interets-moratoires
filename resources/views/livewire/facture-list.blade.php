@@ -150,6 +150,34 @@
                                 </td>
                                 <td>
                                     <div class="btn-group" role="group">
+                                        @if ($facture->pdf_path)
+                                            <a href="{{ asset('storage/' . $facture->pdf_path) }}" target="_blank"
+                                                class="btn btn-sm btn-secondary">
+                                                <i class="fas fa-file-pdf"></i> Voir PDF
+                                            </a>
+
+                                            @if ($facture->client->email)
+                                                <button onclick="sendFactureEmail({{ $facture->id }})"
+                                                    class="btn btn-sm btn-success">
+                                                    <i class="fas fa-envelope"></i> Envoyer
+                                                </button>
+                                            @else
+                                                <span class="btn btn-sm btn-warning" title="Client sans email">
+                                                    <i class="fas fa-exclamation-triangle"></i> Pas d'email
+                                                </span>
+                                            @endif
+                                        @else
+                                            <form action="{{ route('factures.upload_pdf', $facture->id) }}"
+                                                method="POST" enctype="multipart/form-data"
+                                                class="d-flex gap-2 align-items-center">
+                                                @csrf
+                                                <input type="file" name="facture_pdf" accept="application/pdf"
+                                                    required class="form-control form-control-sm">
+                                                <button type="submit" class="btn btn-sm btn-primary">
+                                                    <i class="fas fa-upload"></i> Uploader
+                                                </button>
+                                            </form>
+                                        @endif
                                         <button wire:click="showDetails({{ $facture->id }})"
                                             class="btn btn-sm btn-outline-primary" title="Détails">
                                             <i class="fas fa-eye"></i>

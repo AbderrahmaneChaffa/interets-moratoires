@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+{{-- <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
@@ -84,6 +84,34 @@
         <p>Cet email a été envoyé automatiquement par le système de gestion des intérêts de moratoire.</p>
         <p>Pour toute question, veuillez contacter notre équipe.</p>
         <p><strong>HTS High Tech Systems</strong></p>
+    </div>
+</body>
+</html> --}}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Facture {{ $facture->reference }}</title>
+</head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+    <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h2 style="color: #2c3e50;">Facture {{ $facture->reference }}</h2>
+        
+        <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            <p><strong>Client:</strong> {{ $facture->client->raison_sociale }}</p>
+            <p><strong>Montant:</strong> {{ $facture->net_a_payer_formatted }}</p>
+            <p><strong>Date:</strong> {{ $facture->date_facture->format('d/m/Y') }}</p>
+        </div>
+        
+        <div style="white-space: pre-line; margin: 20px 0;">
+            {{ $message }}
+        </div>
+        
+        <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+        
+        <p style="font-size: 12px; color: #666;">
+            Cet email a été envoyé automatiquement depuis notre système de gestion des factures.
+        </p>
     </div>
 </body>
 </html>
