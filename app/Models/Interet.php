@@ -12,14 +12,16 @@ class Interet extends Model
 
     protected $fillable = [
         'facture_id',
-        'reference',    
+        'reference',
         'date_debut_periode',
         'date_fin_periode',
         'statut',
         'jours_retard',
         'interet_ht',
         'interet_ttc',
-        'pdf_path'
+        'pdf_path',
+        'valide',
+
     ];
 
     protected $casts = [
@@ -57,4 +59,4 @@ class Interet extends Model
             ->where('date_fin_periode', $dateFin)
             ->exists();
     }
-} 
+}
