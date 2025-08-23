@@ -246,7 +246,7 @@
                         </p>
                     </div>
                     <div>
-                        {{ $factures->links('pagination::bootstrap-5') }}
+                        {{ $factures->links() }}
                     </div>
                 </div>
             @endif

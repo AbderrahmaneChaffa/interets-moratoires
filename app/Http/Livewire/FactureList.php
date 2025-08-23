@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Mail;
 class FactureList extends Component
 {
     use WithPagination;
-
+    protected $paginationTheme = 'bootstrap';
     public $expandedId = null;
     public $selectedClient = '';
     public $selectedStatut = '';
@@ -31,7 +31,7 @@ class FactureList extends Component
     public $showDetailsModal = false;
     public $showDeleteModal = false;
     public $factureDetails = null;
-    
+
     public $showEmailModal = false;
     public $selectedFacture = null;
     public $emailDestinataire = '';
@@ -106,17 +106,17 @@ class FactureList extends Component
     public function openEmailModal($factureId)
     {
         $this->selectedFacture = Facture::with(['client', 'interets'])->find($factureId);
-        
+
         if ($this->selectedFacture) {
             // Pré-remplir les champs
             $this->emailDestinataire = $this->selectedFacture->client->email ?? '';
             $this->emailObjet = "Facture {$this->selectedFacture->reference}";
             $this->emailMessage = "Bonjour,\n\nVeuillez trouver ci-joint la facture {$this->selectedFacture->reference}.\n\nCordialement,";
-            
+
             // Cocher par défaut la facture PDF si elle existe
             $this->attachFacturePdf = (bool) $this->selectedFacture->pdf_path;
             $this->attachInteretsPdf = [];
-            
+
             $this->showEmailModal = true;
             $this->dispatchBrowserEvent('open-facture-email');
 
@@ -150,7 +150,7 @@ class FactureList extends Component
 
         try {
             $attachments = [];
-            
+
             // Ajouter la facture PDF si sélectionnée
             if ($this->attachFacturePdf && $this->selectedFacture->pdf_path) {
                 $attachments[] = [
@@ -158,7 +158,7 @@ class FactureList extends Component
                     'name' => "Facture_{$this->selectedFacture->reference}.pdf"
                 ];
             }
-            
+
             // Ajouter les PDFs d'intérêts sélectionnés
             if (!empty($this->attachInteretsPdf)) {
                 foreach ($this->selectedFacture->interets->whereIn('id', $this->attachInteretsPdf) as $interet) {
@@ -177,8 +177,8 @@ class FactureList extends Component
                 'message' => $this->emailMessage,
             ], function ($mail) use ($attachments) {
                 $mail->to($this->emailDestinataire)
-                     ->subject($this->emailObjet);
-                
+                    ->subject($this->emailObjet);
+
                 foreach ($attachments as $attachment) {
                     if (file_exists($attachment['path'])) {
                         $mail->attach($attachment['path'], ['as' => $attachment['name']]);
@@ -188,7 +188,7 @@ class FactureList extends Component
 
             session()->flash('message', 'Email envoyé avec succès à ' . $this->emailDestinataire);
             $this->closeEmailModal();
-            
+
         } catch (\Exception $e) {
             session()->flash('error', 'Erreur lors de l\'envoi de l\'email: ' . $e->getMessage());
         }
@@ -214,7 +214,7 @@ class FactureList extends Component
         $this->net_a_payer = $f->net_a_payer;
         $this->statut = $f->statut;
         $this->delai_legal_jours = $f->delai_legal_jours ?? 30;
-         $this->showModal = true;
+        $this->showModal = true;
         $this->dispatchBrowserEvent('open-facture-modal');
 
     }
@@ -246,7 +246,7 @@ class FactureList extends Component
         $this->facture_id = $id;
         $this->dispatchBrowserEvent('open-facture-delete');
 
-         $this->showDeleteModal = true;
+        $this->showDeleteModal = true;
     }
     public function closeDetails()
     {
@@ -261,7 +261,7 @@ class FactureList extends Component
             return;
         }
         $f->delete();
-         $this->showDeleteModal = false;
+        $this->showDeleteModal = false;
         $this->dispatchBrowserEvent('close-facture-delete');
 
         session()->flash('message', 'Facture supprimée avec succès.');
