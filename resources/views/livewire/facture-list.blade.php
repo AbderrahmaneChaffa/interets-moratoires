@@ -94,7 +94,7 @@
     <!-- Tableau des factures amélioré -->
     <div class="card shadow-sm">
         <div class="card-body p-0">
-             <!-- Ajout de overflow-visible pour permettre l'affichage complet des dropdowns -->
+            <!-- Ajout de overflow-visible pour permettre l'affichage complet des dropdowns -->
             <div class="table-responsive" style="overflow-x: auto; overflow-y: visible;">
                 <table class="table table-hover mb-0">
                     <thead class="table-dark">
@@ -110,7 +110,7 @@
                     </thead>
                     <tbody>
                         @forelse ($factures as $facture)
-                              <!-- Ajout de position relative pour le contexte de positionnement du dropdown -->
+                            <!-- Ajout de position relative pour le contexte de positionnement du dropdown -->
                             <tr class="border-bottom" style="position: relative;">
                                 <td class="px-3 py-3">
                                     <div>
@@ -124,7 +124,8 @@
                                     <div>
                                         <span class="fw-medium">{{ $facture->client->raison_sociale ?? '-' }}</span>
                                         @if ($facture->client->email)
-                                            <br><small class="text-muted"><i class="fas fa-envelope"></i> {{ $facture->client->email }}</small>
+                                            <br><small class="text-muted"><i class="fas fa-envelope"></i>
+                                                {{ $facture->client->email }}</small>
                                         @endif
                                     </div>
                                 </td>
@@ -132,9 +133,11 @@
                                     <div>
                                         <span class="fw-medium">{{ $facture->date_facture->format('d/m/Y') }}</span>
                                         @if ($facture->date_reglement)
-                                            <br><small class="text-success"><i class="fas fa-check"></i> {{ $facture->date_reglement->format('d/m/Y') }}</small>
+                                            <br><small class="text-success"><i class="fas fa-check"></i>
+                                                {{ $facture->date_reglement->format('d/m/Y') }}</small>
                                         @elseif ($facture->date_depot)
-                                            <br><small class="text-info"><i class="fas fa-clock"></i> {{ $facture->date_depot->format('d/m/Y') }}</small>
+                                            <br><small class="text-info"><i class="fas fa-clock"></i>
+                                                {{ $facture->date_depot->format('d/m/Y') }}</small>
                                         @endif
                                     </div>
                                 </td>
@@ -144,10 +147,10 @@
                                 <td class="px-3 py-3 text-center">
                                     <div>
                                         <span class="badge fs-6 px-2 py-1
-                                            @if ($facture->statut === 'Payée') bg-success
-                                            @elseif($facture->statut === 'Retard de paiement') bg-warning text-dark
-                                            @elseif($facture->statut === 'Impayée') bg-danger
-                                            @else bg-secondary @endif">
+                                                @if ($facture->statut === 'Payée') bg-success
+                                                @elseif($facture->statut === 'Retard de paiement') bg-warning text-dark
+                                                @elseif($facture->statut === 'Impayée') bg-danger
+                                                @else bg-secondary @endif">
                                             {{ $facture->statut }}
                                         </span>
                                         @if ($facture->jours_retard > 0)
@@ -162,27 +165,28 @@
                                         <span class="text-muted">0,00 DA</span>
                                     @endif
                                 </td>
-                                  <td class="px-3 py-3">
+                                <td class="px-3 py-3">
                                     <!-- Actions compactes avec dropdown pour éviter le scroll horizontal -->
                                     <div class="d-flex gap-1 justify-content-center flex-wrap">
                                         @if ($facture->pdf_path)
                                             <a href="{{ asset('storage/' . $facture->pdf_path) }}" target="_blank"
-                                                class="btn btn-sm btn-outline-secondary" title="Voir PDF" data-bs-toggle="tooltip">
+                                                class="btn btn-sm btn-outline-secondary" title="Voir PDF"
+                                                data-bs-toggle="tooltip">
                                                 <i class="fas fa-file-pdf"></i>
                                             </a>
-                                            
+
                                             <!-- Bouton pour ouvrir le modal d'envoi d'email -->
                                             <button wire:click="openEmailModal({{ $facture->id }})"
-                                                class="btn btn-sm btn-outline-success" title="Envoyer par email" data-bs-toggle="tooltip">
+                                                class="btn btn-sm btn-outline-success" title="Envoyer par email"
+                                                data-bs-toggle="tooltip">
                                                 <i class="fas fa-envelope"></i>
                                             </button>
                                         @else
-                                            <form action="{{ route('factures.upload_pdf', $facture->id) }}"
-                                                method="POST" enctype="multipart/form-data" class="d-inline">
+                                            <form action="{{ route('factures.upload_pdf', $facture->id) }}" method="POST"
+                                                enctype="multipart/form-data" class="d-inline">
                                                 @csrf
-                                                <input type="file" name="facture_pdf" accept="application/pdf"
-                                                    required class="d-none" id="file-{{ $facture->id }}"
-                                                    onchange="this.form.submit()">
+                                                <input type="file" name="facture_pdf" accept="application/pdf" required
+                                                    class="d-none" id="file-{{ $facture->id }}" onchange="this.form.submit()">
                                                 <button type="button" class="btn btn-sm btn-outline-primary"
                                                     onclick="document.getElementById('file-{{ $facture->id }}').click()"
                                                     title="Uploader PDF" data-bs-toggle="tooltip">
@@ -190,32 +194,37 @@
                                                 </button>
                                             </form>
                                         @endif
-                                        
+
                                         <!-- Boutons d'actions horizontaux -->
-                                        <button class="btn btn-sm btn-outline-info" wire:click="showDetails({{ $facture->id }})"
-                                            title="Voir détails" data-bs-toggle="tooltip">
+                                        <button class="btn btn-sm btn-outline-info"
+                                            wire:click="showDetails({{ $facture->id }})" title="Voir détails"
+                                            data-bs-toggle="tooltip">
                                             <i class="fas fa-eye"></i>
                                         </button>
-                                        
-                                        <button class="btn btn-sm btn-outline-warning" wire:click="openEdit({{ $facture->id }})"
-                                            title="Modifier" data-bs-toggle="tooltip">
+
+                                        <button class="btn btn-sm btn-outline-warning"
+                                            wire:click="openEdit({{ $facture->id }})" title="Modifier"
+                                            data-bs-toggle="tooltip">
                                             <i class="fas fa-edit"></i>
                                         </button>
-                                        
+
                                         @if ($facture->peutGenererInterets())
-                                            <button class="btn btn-sm btn-outline-secondary" wire:click="calculerInteret({{ $facture->id }})"
-                                                title="Calculer intérêts" data-bs-toggle="tooltip">
+                                            <button class="btn btn-sm btn-outline-secondary"
+                                                wire:click="calculerInteret({{ $facture->id }})" title="Calculer intérêts"
+                                                data-bs-toggle="tooltip">
                                                 <i class="fas fa-calculator"></i>
                                             </button>
                                         @endif
-                                        
-                                        <a class="btn btn-sm btn-outline-dark" href="{{ route('factures.interets', $facture->id) }}"
-                                            title="Gérer intérêts" data-bs-toggle="tooltip">
+
+                                        <a class="btn btn-sm btn-outline-dark"
+                                            href="{{ route('factures.interets', $facture->id) }}" title="Gérer intérêts"
+                                            data-bs-toggle="tooltip">
                                             <i class="fas fa-cogs"></i>
                                         </a>
-                                        
-                                        <button class="btn btn-sm btn-outline-danger" wire:click="confirmDelete({{ $facture->id }})"
-                                            title="Supprimer" data-bs-toggle="tooltip">
+
+                                        <button class="btn btn-sm btn-outline-danger"
+                                            wire:click="confirmDelete({{ $facture->id }})" title="Supprimer"
+                                            data-bs-toggle="tooltip">
                                             <i class="fas fa-trash"></i>
                                         </button>
                                     </div>
@@ -266,10 +275,27 @@
                     </div>
                     <form wire:submit.prevent="sendEmail">
                         <div class="modal-body">
+
+                            {{-- ✅ Badge retour envoi email --}}
+                            @if (session()->has('message'))
+                                <div class="alert alert-success d-flex align-items-center">
+                                    <i class="fas fa-check-circle me-2"></i>
+                                    <span>{{ session('message') }}</span>
+                                </div>
+                            @elseif (session()->has('error'))
+                                <div class="alert alert-danger d-flex align-items-center">
+                                    <i class="fas fa-times-circle me-2"></i>
+                                    <span>{{ session('error') }}</span>
+                                </div>
+                            @endif
+
                             <!-- Informations de la facture -->
                             <div class="alert alert-info">
                                 <h6><i class="fas fa-file-invoice"></i> Facture: {{ $selectedFacture->reference }}</h6>
-                                <p class="mb-0">Client: {{ $selectedFacture->client->raison_sociale }} | Montant: {{ $selectedFacture->net_a_payer_formatted }}</p>
+                                <p class="mb-0">
+                                    Client: {{ $selectedFacture->client->raison_sociale }} |
+                                    Montant: {{ $selectedFacture->net_a_payer_formatted }}
+                                </p>
                             </div>
 
                             <!-- Email destinataire -->
@@ -277,14 +303,15 @@
                                 <label for="emailDestinataire" class="form-label fw-semibold">
                                     <i class="fas fa-at"></i> Email destinataire *
                                 </label>
-                                <input type="email" wire:model="emailDestinataire" 
+                                <input type="email" wire:model="emailDestinataire"
                                     class="form-control @error('emailDestinataire') is-invalid @enderror"
                                     placeholder="exemple@email.com">
                                 @if($selectedFacture->client->email)
                                     <div class="form-text">
-                                        <button type="button" class="btn btn-sm btn-link p-0" 
+                                        <button type="button" class="btn btn-sm btn-link p-0"
                                             wire:click="$set('emailDestinataire', '{{ $selectedFacture->client->email }}')">
-                                            <i class="fas fa-user"></i> Utiliser l'email du client: {{ $selectedFacture->client->email }}
+                                            <i class="fas fa-user"></i> Utiliser l'email du client:
+                                            {{ $selectedFacture->client->email }}
                                         </button>
                                     </div>
                                 @endif
@@ -298,7 +325,7 @@
                                 <label for="emailObjet" class="form-label fw-semibold">
                                     <i class="fas fa-tag"></i> Objet *
                                 </label>
-                                <input type="text" wire:model="emailObjet" 
+                                <input type="text" wire:model="emailObjet"
                                     class="form-control @error('emailObjet') is-invalid @enderror"
                                     placeholder="Facture {{ $selectedFacture->reference }}">
                                 @error('emailObjet')
@@ -311,9 +338,9 @@
                                 <label for="emailMessage" class="form-label fw-semibold">
                                     <i class="fas fa-comment"></i> Message
                                 </label>
-                                <textarea wire:model="emailMessage" 
-                                    class="form-control @error('emailMessage') is-invalid @enderror"
-                                    rows="4" placeholder="Bonjour,&#10;&#10;Veuillez trouver ci-joint la facture {{ $selectedFacture->reference }}.&#10;&#10;Cordialement,"></textarea>
+                                <textarea wire:model="emailMessage"
+                                    class="form-control @error('emailMessage') is-invalid @enderror" rows="4"
+                                    placeholder="Bonjour,&#10;&#10;Veuillez trouver ci-joint la facture {{ $selectedFacture->reference }}.&#10;&#10;Cordialement,"></textarea>
                                 @error('emailMessage')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -327,21 +354,22 @@
                                 <div class="border rounded p-3 bg-light">
                                     @if($selectedFacture->pdf_path)
                                         <div class="d-flex align-items-center mb-2">
-                                            <input type="checkbox" wire:model="attachFacturePdf" class="form-check-input me-2" id="attachFacture">
+                                            <input type="checkbox" wire:model="attachFacturePdf" class="form-check-input me-2"
+                                                id="attachFacture">
                                             <label for="attachFacture" class="form-check-label">
-                                                <i class="fas fa-file-pdf text-danger"></i> 
+                                                <i class="fas fa-file-pdf text-danger"></i>
                                                 Facture {{ $selectedFacture->reference }}.pdf
                                             </label>
                                         </div>
                                     @endif
-                                    
+
                                     @if($selectedFacture->interets->where('pdf_path', '!=', null)->count() > 0)
                                         @foreach($selectedFacture->interets->where('pdf_path', '!=', null) as $interet)
                                             <div class="d-flex align-items-center mb-2">
-                                                <input type="checkbox" wire:model="attachInteretsPdf" value="{{ $interet->id }}" 
+                                                <input type="checkbox" wire:model="attachInteretsPdf" value="{{ $interet->id }}"
                                                     class="form-check-input me-2" id="attachInteret{{ $interet->id }}">
                                                 <label for="attachInteret{{ $interet->id }}" class="form-check-label">
-                                                    <i class="fas fa-file-pdf text-warning"></i> 
+                                                    <i class="fas fa-file-pdf text-warning"></i>
                                                     Intérêts {{ $interet->date_debut_periode->format('m/Y') }}.pdf
                                                 </label>
                                             </div>
@@ -371,6 +399,7 @@
         <div class="modal-backdrop fade show"></div>
     @endif
 
+
     <!-- Modal Détails -->
     @if ($showDetailsModal && $factureDetails)
         <div class="modal fade show" style="display: block;" tabindex="-1">
@@ -380,8 +409,7 @@
                         <h5 class="modal-title">
                             <i class="fas fa-file-invoice"></i> Détails de la facture {{ $factureDetails->reference }}
                         </h5>
-                        <button type="button" class="btn-close"
-                            wire:click="$set('showDetailsModal', false)"></button>
+                        <button type="button" class="btn-close" wire:click="$set('showDetailsModal', false)"></button>
                     </div>
                     <div class="modal-body">
                         <div class="row">
@@ -633,8 +661,7 @@
                         <h5 class="modal-title">
                             <i class="fas fa-exclamation-triangle text-danger"></i> Confirmer la suppression
                         </h5>
-                        <button type="button" class="btn-close"
-                            wire:click="$set('showDeleteModal', false)"></button>
+                        <button type="button" class="btn-close" wire:click="$set('showDeleteModal', false)"></button>
                     </div>
                     <div class="modal-body">
                         <p>Êtes-vous sûr de vouloir supprimer cette facture ?</p>

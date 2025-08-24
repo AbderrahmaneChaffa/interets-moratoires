@@ -10,6 +10,8 @@ use App\Services\InteretService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\FacturesExport;
+use App\Mail\FactureEmail;
+use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Support\Facades\Mail;
 
 
@@ -142,52 +144,42 @@ class FactureList extends Component
             'emailDestinataire' => 'required|email',
             'emailObjet' => 'required|string|max:255',
             'emailMessage' => 'nullable|string',
-        ], [
-            'emailDestinataire.required' => 'L\'email destinataire est obligatoire.',
-            'emailDestinataire.email' => 'L\'email destinataire doit être valide.',
-            'emailObjet.required' => 'L\'objet est obligatoire.',
         ]);
 
         try {
             $attachments = [];
 
-            // Ajouter la facture PDF si sélectionnée
+            // Facture
             if ($this->attachFacturePdf && $this->selectedFacture->pdf_path) {
-                $attachments[] = [
-                    'path' => storage_path('app/public/' . $this->selectedFacture->pdf_path),
-                    'name' => "Facture_{$this->selectedFacture->reference}.pdf"
-                ];
+                $attachments[] = Attachment::fromPath(
+                    storage_path('app/public/' . $this->selectedFacture->pdf_path)
+                )->as("Facture_{$this->selectedFacture->reference}.pdf")
+                    ->withMime('application/pdf');
             }
 
-            // Ajouter les PDFs d'intérêts sélectionnés
+            // Intérêts
             if (!empty($this->attachInteretsPdf)) {
                 foreach ($this->selectedFacture->interets->whereIn('id', $this->attachInteretsPdf) as $interet) {
                     if ($interet->pdf_path) {
-                        $attachments[] = [
-                            'path' => storage_path('app/public/' . $interet->pdf_path),
-                            'name' => "Interets_{$this->selectedFacture->reference}_{$interet->date_debut_periode->format('m_Y')}.pdf"
-                        ];
+                        $attachments[] = Attachment::fromPath(
+                            storage_path('app/public/' . $interet->pdf_path)
+                        )->as("Interets_{$this->selectedFacture->reference}_{$interet->date_debut_periode->format('m_Y')}.pdf")
+                            ->withMime('application/pdf');
                     }
                 }
             }
-
-            // Envoyer l'email (vous devrez créer une classe Mail appropriée)
-            Mail::send('emails.facture', [
-                'facture' => $this->selectedFacture,
-                'message' => $this->emailMessage,
-            ], function ($mail) use ($attachments) {
-                $mail->to($this->emailDestinataire)
-                    ->subject($this->emailObjet);
-
-                foreach ($attachments as $attachment) {
-                    if (file_exists($attachment['path'])) {
-                        $mail->attach($attachment['path'], ['as' => $attachment['name']]);
-                    }
-                }
-            });
+            // Envoi via ton Mailable
+            Mail::to($this->emailDestinataire)->send(
+                new FactureEmail(
+                    $this->selectedFacture,
+                    $this->selectedFacture->client,
+                    $this->emailMessage,
+                    $attachments
+                )
+            );
 
             session()->flash('message', 'Email envoyé avec succès à ' . $this->emailDestinataire);
-            $this->closeEmailModal();
+            // $this->closeEmailModal();
 
         } catch (\Exception $e) {
             session()->flash('error', 'Erreur lors de l\'envoi de l\'email: ' . $e->getMessage());
