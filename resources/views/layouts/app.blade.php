@@ -409,13 +409,13 @@
                             Liste Factures
                         </a>
                     </li>
-                    <li class="nav-item">
+                    <!-- <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('factures.tableau') ? 'active' : '' }}"
                             href="{{ route('factures.tableau') }}">
                             <i class="fas fa-table me-2"></i>
                             Tableau avec Filtres
                         </a>
-                    </li>
+                    </li> -->
                 </ul>
 
                 <!-- Authentication Section -->

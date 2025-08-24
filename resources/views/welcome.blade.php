@@ -32,7 +32,7 @@
                             <i class="fas fa-plus-circle me-2"></i>
                             Créer une Facture
                         </a>
-                        <a href="{{ route('factures.tableau') }}" class="btn btn-outline-primary btn-lg">
+                        <a href="{{ route('factures') }}" class="btn btn-outline-primary btn-lg">
                             <i class="fas fa-chart-bar me-2"></i>
                             Voir les Rapports
                         </a>
@@ -123,7 +123,7 @@
             </div>
         </div>
 
-        <div class="col-lg-3 col-md-6">
+        <!-- <div class="col-lg-3 col-md-6">
             <div class="feature-card h-100">
                 <div class="feature-icon bg-warning">
                     <i class="fas fa-table"></i>
@@ -145,7 +145,7 @@
                     </a>
                 </div>
             </div>
-        </div>
+        </div> -->
     </div>
 
     <!-- Recent Activity Section -->
@@ -220,7 +220,7 @@
             </div>
 
             <!-- Quick Tips Card -->
-            <div class="card tips-card mt-4">
+            <!-- <div class="card tips-card mt-4">
                 <div class="card-header">
                     <h5 class="mb-0">
                         <i class="fas fa-lightbulb me-2"></i>
@@ -234,7 +234,7 @@
                     </div>
                 </div>
             </div>
-        </div>
+        </div> -->
     </div>
 
     <!-- Custom Styles for Welcome Page -->
