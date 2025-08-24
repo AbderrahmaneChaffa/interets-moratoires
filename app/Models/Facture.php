@@ -99,7 +99,9 @@ class Facture extends Model
     public static function getStatutsDisponibles()
     {
         return [
+            'En attente' => 'En attente',
             'Payée' => 'Payée',
+            'Retard de paiement' => 'Retard de paiement',
             'Impayée' => 'Impayée'
         ];
     }
