@@ -535,7 +535,7 @@
                                     <div class="mb-3">
                                         <label for="reference" class="form-label">Référence *</label>
                                         <input type="text" wire:model="reference"
-                                            class="form-control @error('reference') is-invalid @enderror">
+                                            class="form-control @error('reference') is-invalid @enderror" disabled>
                                         @error('reference')
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
@@ -545,7 +545,7 @@
                                     <div class="mb-3">
                                         <label for="date_facture" class="form-label">Date facture *</label>
                                         <input type="date" wire:model="date_facture"
-                                            class="form-control @error('date_facture') is-invalid @enderror">
+                                            class="form-control @error('date_facture') is-invalid @enderror" disabled>
                                         @error('date_facture')
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
@@ -553,21 +553,21 @@
                                 </div>
                             </div>
 
-                            <div class="mb-3">
+                            <!-- <div class="mb-3">
                                 <label for="prestation" class="form-label">Prestation</label>
                                 <input type="text" wire:model="prestation"
-                                    class="form-control @error('prestation') is-invalid @enderror">
+                                    class="form-control @error('prestation') is-invalid @enderror" disabled>
                                 @error('prestation')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
-                            </div>
+                            </div> -->
 
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="mb-3">
                                         <label for="montant_ht" class="form-label">Montant HT *</label>
                                         <input type="number" step="0.01" wire:model="montant_ht"
-                                            class="form-control @error('montant_ht') is-invalid @enderror">
+                                            class="form-control @error('montant_ht') is-invalid @enderror" disabled>
                                         @error('montant_ht')
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
@@ -577,7 +577,7 @@
                                     <div class="mb-3">
                                         <label for="net_a_payer" class="form-label">Net à payer *</label>
                                         <input type="number" step="0.01" wire:model="net_a_payer"
-                                            class="form-control @error('net_a_payer') is-invalid @enderror">
+                                            class="form-control @error('net_a_payer') is-invalid @enderror" disabled>
                                         @error('net_a_payer')
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
@@ -590,7 +590,7 @@
                                     <div class="mb-3">
                                         <label for="date_depot" class="form-label">Date dépôt *</label>
                                         <input type="date" wire:model="date_depot"
-                                            class="form-control @error('date_depot') is-invalid @enderror">
+                                            class="form-control @error('date_depot') is-invalid @enderror" disabled>
                                         @error('date_depot')
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
@@ -625,7 +625,7 @@
                                         @enderror
                                     </div>
                                 </div>
-                                <div class="col-md-6">
+                                <!-- <div class="col-md-6">
                                     <div class="mb-3">
                                         <label for="delai_legal_jours" class="form-label">Délai légal (jours)
                                             *</label>
@@ -635,7 +635,7 @@
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
                                     </div>
-                                </div>
+                                </div> -->
                             </div>
                         </div>
                         <div class="modal-footer">

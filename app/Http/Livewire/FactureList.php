@@ -11,9 +11,10 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\FacturesExport;
 use App\Mail\FactureEmail;
+use Carbon\Carbon;
 use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Support\Facades\Mail;
-
+use Maatwebsite\Excel\Excel as ExcelExcel;
 
 class FactureList extends Component
 {
@@ -294,8 +295,70 @@ class FactureList extends Component
 
     public function exportExcel()
     {
-        return Excel::download(new FacturesExport($this->selectedClient, $this->dateFrom, $this->dateTo), 'factures-interets.xlsx');
+        $interetService = app(InteretService::class);
+
+        $selectedClient = $this->selectedClient;
+        $dateFrom = $this->dateFrom;
+        $dateTo = $this->dateTo;
+
+        return Excel::create('factures-interets', function ($excel) use ($selectedClient, $dateFrom, $dateTo, $interetService) {
+            $excel->sheet('Factures', function ($sheet) use ($selectedClient, $dateFrom, $dateTo, $interetService) {
+
+                $query = Facture::with('client');
+
+                if ($selectedClient) {
+                    $query->where('client_id', $selectedClient);
+                }
+
+                if ($dateFrom) {
+                    $query->where('date_facture', '>=', $dateFrom);
+                }
+
+                if ($dateTo) {
+                    $query->where('date_facture', '<=', $dateTo);
+                }
+
+                $factures = $query->orderBy('date_facture', 'desc')->get();
+
+                $rows = [];
+                $rows[] = [
+                    'Référence',
+                    'Date facture',
+                    'Client',
+                    'Montant HT',
+                    'Jours de retard',
+                    'Intérêt HT',
+                    'Intérêt TTC'
+                ];
+
+                foreach ($factures as $facture) {
+                    $jours_retards = 0;
+                    if ($facture->date_depot && is_null($facture->date_reglement)) {
+                        $jours_retards = now()->diffInDays(Carbon::parse($facture->date_depot));
+                    }
+
+                    $result = $interetService->calculerInteretsPourPeriode(
+                        $facture,
+                        $facture->date_depot ?: now(),
+                        now()
+                    );
+
+                    $rows[] = [
+                        $facture->reference,
+                        Carbon::parse($facture->date_facture)->format('d/m/Y'),
+                        $facture->client->raison_sociale ?? '-',
+                        number_format($facture->montant_ht, 2) . ' DA',
+                        $jours_retards . ' jours',
+                        number_format($result['interet_ht'], 2) . ' DA',
+                        number_format($result['interet_ttc'], 2) . ' DA'
+                    ];
+                }
+
+                $sheet->fromArray($rows, null, 'A1', false, false);
+            });
+        })->download('xlsx');
     }
+
 
     public function exportPdf()
     {

@@ -3,13 +3,9 @@
 namespace App\Exports;
 
 use App\Models\Facture;
-use App\Models\Client;
-use Maatwebsite\Excel\Concerns\FromCollection;
-use Maatwebsite\Excel\Concerns\WithHeadings;
-use Maatwebsite\Excel\Concerns\WithMapping;
 use Carbon\Carbon;
 
-class FacturesExport implements FromCollection, WithHeadings, WithMapping
+class FacturesExport
 {
     protected $selectedClient;
     protected $dateFrom;
@@ -22,7 +18,7 @@ class FacturesExport implements FromCollection, WithHeadings, WithMapping
         $this->dateTo = $dateTo;
     }
 
-    public function collection()
+    public function getData()
     {
         $query = Facture::with('client');
 
@@ -38,12 +34,12 @@ class FacturesExport implements FromCollection, WithHeadings, WithMapping
             $query->where('date_facture', '<=', $this->dateTo);
         }
 
-        return $query->orderBy('date_facture', 'desc')->get();
-    }
+        $factures = $query->orderBy('date_facture', 'desc')->get();
 
-    public function headings(): array
-    {
-        return [
+        $rows = [];
+
+        // Ligne d'entêtes
+        $rows[] = [
             'Référence',
             'Date facture',
             'Client',
@@ -52,25 +48,28 @@ class FacturesExport implements FromCollection, WithHeadings, WithMapping
             'Intérêt HT',
             'Intérêt TTC'
         ];
-    }
 
-    public function map($facture): array
-    {
-        $jours_retards = 0;
-        if ($facture->date_depot && is_null($facture->date_reglement)) {
-            $jours_retards = now()->diffInDays(Carbon::parse($facture->date_depot));
+        // Lignes de données
+        foreach ($factures as $facture) {
+            $jours_retards = 0;
+            if ($facture->date_depot && is_null($facture->date_reglement)) {
+                $jours_retards = now()->diffInDays(Carbon::parse($facture->date_depot));
+            }
+
+            $result = app('App\Services\InteretService')
+                ::calculerInteretsPourPeriode($facture, $facture->date_depot ?: now(), now());
+
+            $rows[] = [
+                $facture->reference,
+                Carbon::parse($facture->date_facture)->format('d/m/Y'),
+                $facture->client->raison_sociale ?? '-',
+                number_format($facture->montant_ht, 2) . ' DA',
+                $jours_retards . ' jours',
+                number_format($result['interet_ht'], 2) . ' DA',
+                number_format($result['interet_ttc'], 2) . ' DA'
+            ];
         }
-        
-        $result = $facture->calculerInteretsMoratoires($jours_retards);
 
-        return [
-            $facture->reference,
-            Carbon::parse($facture->date_facture)->format('d/m/Y'),
-            $facture->client->raison_sociale ?? '-',
-            number_format($facture->montant_ht, 2) . ' DA',
-            $jours_retards . ' jours',
-            number_format($result['interet_ht'], 2) . ' DA',
-            number_format($result['interet_ttc'], 2) . ' DA'
-        ];
+        return $rows;
     }
-} 
+}
