@@ -5,13 +5,19 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Facture extends Model
 {
     use HasFactory;
+    use SoftDeletes;
 
+    protected $dates = ['deleted_at'];
     protected $fillable = [
-        'client_id', 'parent_id', 'type', 'prestation',
+        'client_id',
+        'parent_id',
+        'type',
+        'prestation',
         'reference',
         'date_facture',
         'montant_ht',
@@ -36,7 +42,7 @@ class Facture extends Model
         return $this->belongsTo(Client::class);
     }
 
-  
+
 
     public function interets()
     {
@@ -51,7 +57,7 @@ class Facture extends Model
     public function calculerStatut()
     {
         $delai_legal = $this->delai_legal_jours ?? 30;
-        
+
         if (!$this->date_depot) {
             $this->statut = 'En attente';
             return $this->statut;
@@ -143,12 +149,12 @@ class Facture extends Model
 
         $delai_legal = $this->delai_legal_jours ?? 30;
         $date_limite = $this->date_depot->copy()->addDays($delai_legal);
-        
+
         // Si la facture est payée, vérifier si elle a été payée en retard
         if ($this->date_reglement) {
             return $this->date_reglement > $date_limite;
         }
-        
+
         // Si la facture n'est pas payée, vérifier si le délai est dépassé
         return now() > $date_limite;
     }
