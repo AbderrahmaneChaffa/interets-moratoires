@@ -6,9 +6,9 @@
             <div class="d-flex justify-content-between align-items-center">
                 <h2><i class="fas fa-file-invoice text-primary"></i> Liste des factures</h2>
                 <div>
-                    <button wire:click="exportExcel" class="btn btn-success me-2">
+                    <!-- <button wire:click="exportExcel" class="btn btn-success me-2">
                         <i class="fas fa-file-excel"></i> Export Excel
-                    </button>
+                    </button> -->
                     <button wire:click="exportPdf" class="btn btn-danger">
                         <i class="fas fa-file-pdf"></i> Export PDF
                     </button>
@@ -352,7 +352,7 @@
                                     <i class="fas fa-paperclip"></i> Fichiers joints
                                 </label>
                                 <div class="border rounded p-3 bg-light">
-                                    @if($selectedFacture->pdf_path)
+                                    <!-- @if($selectedFacture->pdf_path)
                                         <div class="d-flex align-items-center mb-2">
                                             <input type="checkbox" wire:model="attachFacturePdf" class="form-check-input me-2"
                                                 id="attachFacture">
@@ -361,9 +361,9 @@
                                                 Facture {{ $selectedFacture->reference }}.pdf
                                             </label>
                                         </div>
-                                    @endif
+                                    @endif -->
 
-                                    @if($selectedFacture->interets->where('pdf_path', '!=', null)->count() > 0)
+                                    <!-- @if($selectedFacture->interets->where('pdf_path', '!=', null)->count() > 0)
                                         @foreach($selectedFacture->interets->where('pdf_path', '!=', null) as $interet)
                                             <div class="d-flex align-items-center mb-2">
                                                 <input type="checkbox" wire:model="attachInteretsPdf" value="{{ $interet->id }}"
@@ -374,7 +374,7 @@
                                                 </label>
                                             </div>
                                         @endforeach
-                                    @endif
+                                    @endif -->
 
                                     @if(!$selectedFacture->pdf_path && $selectedFacture->interets->where('pdf_path', '!=', null)->count() == 0)
                                         <p class="text-muted mb-0">
