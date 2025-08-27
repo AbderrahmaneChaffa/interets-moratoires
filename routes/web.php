@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FacturePdfController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\EmailController;
@@ -29,9 +30,9 @@ Route::get('/', function () {
  */
 
 Route::middleware(['auth'])->group(function () {
-    Route::get('/', function () {
-        return view('welcome');
-    })->middleware('verified')->name('welcome');
+    Route::get('/', [DashboardController::class, 'index'])
+        ->middleware(['auth', 'verified'])
+        ->name('welcome');
 
     // Gestion du profil utilisateur
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
