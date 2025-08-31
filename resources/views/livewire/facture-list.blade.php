@@ -1,16 +1,21 @@
 @section('title', 'Liste des factures')
 
+
 <div class="container-fluid mt-4">
+    <!-- Added export buttons section -->
     <div class="row mb-4">
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center">
                 <h2><i class="fas fa-file-invoice text-primary"></i> Liste des factures</h2>
-                <div>
-                    <!-- <button wire:click="exportExcel" class="btn btn-success me-2">
-                        <i class="fas fa-file-excel"></i> Export Excel
-                    </button> -->
-                    <button wire:click="exportPdf" class="btn btn-danger">
-                        <i class="fas fa-file-pdf"></i> Export PDF
+                <div class="export-buttons">
+                    <button onclick="exportToExcel()" class="btn btn-success export-btn">
+                        <i class="fas fa-file-excel"></i> Excel
+                    </button>
+                    <button onclick="exportToPDF()" class="btn btn-danger export-btn">
+                        <i class="fas fa-file-pdf"></i> PDF
+                    </button>
+                    <button onclick="printTable()" class="btn btn-info export-btn">
+                        <i class="fas fa-print"></i> Imprimer
                     </button>
                 </div>
             </div>
@@ -93,25 +98,38 @@
 
     <!-- Tableau des factures amélioré -->
     <div class="card shadow-sm">
-        <div class="card-body p-0">
-            <!-- Ajout de overflow-visible pour permettre l'affichage complet des dropdowns -->
+        <div class="card-body">
             <div class="table-responsive" style="overflow-x: auto; overflow-y: visible;">
-                <table class="table table-hover mb-0">
+                <table id="facturesTable" class="table table-hover mb-0" style="width:100%">
                     <thead class="table-dark">
                         <tr>
-                            <th class="px-3 py-3">Référence</th>
-                            <th class="px-3 py-3">Client</th>
-                            <th class="px-3 py-3 text-center">Date</th>
-                            <th class="px-3 py-3 text-end">Montant TTC</th>
-                            <th class="px-3 py-3 text-center">Statut</th>
-                            <th class="px-3 py-3 text-end">Intérêts</th>
-                            <th class="px-3 py-3 text-end">Mise a jour</th>
+                            <!-- Added sortable functionality to table headers -->
+                            <th class="px-3 py-3 sortable" onclick="sortTable(0, 'Référence')">
+                                Référence <span class="sort-icon"></span>
+                            </th>
+                            <th class="px-3 py-3 sortable" onclick="sortTable(1, 'Client')">
+                                Client <span class="sort-icon"></span>
+                            </th>
+                            <th class="px-3 py-3 text-center sortable" onclick="sortTable(2, 'Date')">
+                                Date <span class="sort-icon"></span>
+                            </th>
+                            <th class="px-3 py-3 text-end sortable" onclick="sortTable(3, 'Montant')">
+                                Montant TTC <span class="sort-icon"></span>
+                            </th>
+                            <th class="px-3 py-3 text-center sortable" onclick="sortTable(4, 'Statut')">
+                                Statut <span class="sort-icon"></span>
+                            </th>
+                            <th class="px-3 py-3 text-end sortable" onclick="sortTable(5, 'Intérêts')">
+                                Intérêts <span class="sort-icon"></span>
+                            </th>
+                            <th class="px-3 py-3 text-end sortable" onclick="sortTable(6, 'Mise à jour')">
+                                Mise à jour <span class="sort-icon"></span>
+                            </th>
                             <th class="px-3 py-3 text-center" style="width: 200px;">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse ($factures as $facture)
-                        <!-- Ajout de position relative pour le contexte de positionnement du dropdown -->
                         <tr class="border-bottom" style="position: relative;">
                             <td class="px-3 py-3">
                                 <div>
@@ -130,7 +148,7 @@
                                     @endif
                                 </div>
                             </td>
-                            <td class="px-3 py-3 text-center">
+                            <td class="px-3 py-3 text-center" data-order="{{ $facture->date_facture->format('Y-m-d') }}">
                                 <div>
                                     <span class="fw-medium">{{ $facture->date_facture->format('d/m/Y') }}</span>
                                     @if ($facture->date_reglement)
@@ -142,7 +160,7 @@
                                     @endif
                                 </div>
                             </td>
-                            <td class="px-3 py-3 text-end">
+                            <td class="px-3 py-3 text-end" data-order="{{ $facture->net_a_payer }}">
                                 <span class="fw-bold text-dark">{{ $facture->net_a_payer_formatted }}</span>
                             </td>
                             <td class="px-3 py-3 text-center">
@@ -159,14 +177,14 @@
                                     @endif
                                 </div>
                             </td>
-                            <td class="px-3 py-3 text-end">
+                            <td class="px-3 py-3 text-end" data-order="{{ $facture->total_interets }}">
                                 @if ($facture->total_interets > 0)
                                 <span class="text-danger fw-bold">{{ $facture->total_interets_formatted }}</span>
                                 @else
                                 <span class="text-muted">0,00 DA</span>
                                 @endif
                             </td>
-                            <td class="px-3 py-3 text-end">
+                            <td class="px-3 py-3 text-end" data-order="{{ $facture->updated_at->format('Y-m-d H:i:s') }}">
                                 <span class="fw-bold">{{ $facture->updated_at->format('d/m/Y') }}</span>
                                 <br><small class="text-info">
                                     {{ $facture->updated_at->format('H:i') }}</small>
@@ -238,7 +256,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="7" class="text-center py-5">
+                            <td colspan="8" class="text-center py-5">
                                 <div class="text-muted">
                                     <i class="fas fa-inbox fa-3x mb-3"></i>
                                     <h5>Aucune facture trouvée</h5>
@@ -251,20 +269,10 @@
                 </table>
             </div>
 
-            <!-- Pagination améliorée -->
-            @if($factures->hasPages())
-            <div class="d-flex justify-content-between align-items-center p-3 bg-light border-top">
-                <div>
-                    <p class="text-muted mb-0 small">
-                        Affichage de {{ $factures->firstItem() ?? 0 }} à {{ $factures->lastItem() ?? 0 }}
-                        sur {{ $factures->total() }} facture(s)
-                    </p>
-                </div>
-                <div>
-                    {{ $factures->links() }}
-                </div>
+            <!-- Restored Laravel pagination -->
+            <div class="mt-3">
+                {{ $factures->links() }}
             </div>
-            @endif
         </div>
     </div>
 
@@ -686,5 +694,310 @@
     </div>
     <div class="modal-backdrop fade show"></div>
     @endif
+    <!-- Removed all DataTables CSS and added custom styles for export buttons -->
+    <style>
+        .export-buttons {
+            margin-bottom: 1rem;
+        }
 
+        .export-btn {
+            margin-right: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .sortable {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .sortable:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .sort-icon {
+            margin-left: 5px;
+            opacity: 0.5;
+        }
+
+        .sort-asc .sort-icon:before {
+            content: "▲";
+            opacity: 1;
+        }
+
+        .sort-desc .sort-icon:before {
+            content: "▼";
+            opacity: 1;
+        }
+    </style>
+    <!-- Replaced DataTables with lightweight alternatives -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('[v0] Initializing export and sort functionality for Livewire v2...');
+
+            // Export to Excel function
+            window.exportToExcel = function() {
+                try {
+                    console.log('[v0] Starting Excel export...');
+                    if (typeof XLSX === 'undefined') {
+                        alert('XLSX library not loaded. Please refresh the page.');
+                        return;
+                    }
+
+                    const table = document.getElementById('facturesTable');
+                    if (!table) {
+                        alert('Table not found');
+                        return;
+                    }
+
+                    const wb = XLSX.utils.table_to_book(table, {
+                        sheet: "Factures"
+                    });
+                    const filename = 'factures_' + new Date().toISOString().slice(0, 10) + '.xlsx';
+                    XLSX.writeFile(wb, filename);
+                    console.log('[v0] Excel export completed successfully');
+                } catch (error) {
+                    console.error('[v0] Excel export error:', error);
+                    alert('Erreur lors de l\'export Excel: ' + error.message);
+                }
+            };
+
+            // Export to PDF function
+            window.exportToPDF = function() {
+                try {
+                    console.log('[v0] Starting PDF export...');
+
+                    // Check if jsPDF is loaded correctly
+                    if (typeof window.jspdf === 'undefined' || !window.jspdf.jsPDF) {
+                        alert('jsPDF library not loaded properly. Please refresh the page.');
+                        return;
+                    }
+
+                    const {
+                        jsPDF
+                    } = window.jspdf;
+                    const doc = new jsPDF('landscape');
+
+                    // Add header
+                    doc.setFontSize(16);
+                    doc.text('Liste des Factures - HIGH TECH SYSTEMS', 14, 15);
+                    doc.setFontSize(10);
+                    doc.text('Généré le: ' + new Date().toLocaleDateString('fr-FR'), 14, 25);
+
+                    const table = document.getElementById('facturesTable');
+                    if (!table) {
+                        alert('Table not found');
+                        return;
+                    }
+
+                    // Prepare table data
+                    const headers = [];
+                    const headerCells = table.querySelectorAll('thead th');
+                    for (let i = 0; i < headerCells.length - 1; i++) { // Skip actions column
+                        headers.push(headerCells[i].textContent.trim().replace(/\s+/g, ' '));
+                    }
+
+                    const rows = [];
+                    table.querySelectorAll('tbody tr').forEach(tr => {
+                        const cells = tr.querySelectorAll('td');
+                        if (cells.length > 0) {
+                            const row = [];
+                            for (let i = 0; i < cells.length - 1; i++) { // Skip actions column
+                                let cellText = cells[i].textContent.trim().replace(/\s+/g, ' ');
+                                // Clean up text for PDF
+                                cellText = cellText.replace(/\n/g, ' ').substring(0, 50);
+                                row.push(cellText);
+                            }
+                            if (row.length > 0) rows.push(row);
+                        }
+                    });
+
+                    // Add table to PDF
+                    doc.autoTable({
+                        head: [headers],
+                        body: rows,
+                        startY: 35,
+                        styles: {
+                            fontSize: 8,
+                            cellPadding: 2
+                        },
+                        headStyles: {
+                            fillColor: [52, 58, 64],
+                            textColor: 255
+                        },
+                        columnStyles: {
+                            0: {
+                                cellWidth: 25
+                            }, // Reference
+                            1: {
+                                cellWidth: 40
+                            }, // Client
+                            2: {
+                                cellWidth: 25
+                            }, // Date
+                            3: {
+                                cellWidth: 30
+                            }, // Montant
+                            4: {
+                                cellWidth: 25
+                            }, // Statut
+                            5: {
+                                cellWidth: 25
+                            }, // Intérêts
+                            6: {
+                                cellWidth: 25
+                            } // Mise à jour
+                        }
+                    });
+
+                    const filename = 'factures_' + new Date().toISOString().slice(0, 10) + '.pdf';
+                    doc.save(filename);
+                    console.log('[v0] PDF export completed successfully');
+                } catch (error) {
+                    console.error('[v0] PDF export error:', error);
+                    alert('Erreur lors de l\'export PDF: ' + error.message);
+                }
+            };
+
+            // Print table function
+            window.printTable = function() {
+                try {
+                    console.log('[v0] Starting print...');
+                    const printWindow = window.open('', '_blank');
+                    if (!printWindow) {
+                        alert('Impossible d\'ouvrir la fenêtre d\'impression. Vérifiez les paramètres de votre navigateur.');
+                        return;
+                    }
+
+                    const table = document.getElementById('facturesTable');
+                    if (!table) {
+                        alert('Table not found');
+                        return;
+                    }
+
+                    const clonedTable = table.cloneNode(true);
+
+                    // Remove actions column
+                    clonedTable.querySelectorAll('th:last-child, td:last-child').forEach(el => el.remove());
+
+                    printWindow.document.write(`
+                <html>
+                    <head>
+                        <title>Liste des Factures - HIGH TECH SYSTEMS</title>
+                        <style>
+                            body { font-family: Arial, sans-serif; margin: 20px; }
+                            h1 { color: #333; text-align: center; margin-bottom: 10px; }
+                            .subtitle { text-align: center; margin-bottom: 20px; color: #666; }
+                            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 11px; }
+                            th { background-color: #343a40; color: white; font-weight: bold; }
+                            .badge { padding: 2px 6px; border-radius: 3px; font-size: 10px; }
+                            .bg-success { background-color: #28a745; color: white; }
+                            .bg-warning { background-color: #ffc107; color: black; }
+                            .bg-danger { background-color: #dc3545; color: white; }
+                            .bg-secondary { background-color: #6c757d; color: white; }
+                            @media print {
+                                body { margin: 0; }
+                                .no-print { display: none; }
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <h1>Liste des Factures</h1>
+                        <div class="subtitle">HIGH TECH SYSTEMS - Généré le: ${new Date().toLocaleDateString('fr-FR')}</div>
+                        ${clonedTable.outerHTML}
+                    </body>
+                </html>
+            `);
+                    printWindow.document.close();
+
+                    // Wait for content to load then print
+                    setTimeout(() => {
+                        printWindow.print();
+                        printWindow.close();
+                    }, 500);
+
+                    console.log('[v0] Print completed successfully');
+                } catch (error) {
+                    console.error('[v0] Print error:', error);
+                    alert('Erreur lors de l\'impression: ' + error.message);
+                }
+            };
+
+            // Sort functionality
+            let sortDirection = {};
+
+            window.sortTable = function(columnIndex, columnName) {
+                try {
+                    console.log(`[v0] Sorting table by column ${columnIndex} (${columnName})`);
+                    const table = document.getElementById('facturesTable');
+                    if (!table) return;
+
+                    const tbody = table.querySelector('tbody');
+                    const rows = Array.from(tbody.querySelectorAll('tr'));
+
+                    // Skip if no data rows or only "no data" row
+                    if (rows.length === 0 || (rows.length === 1 && rows[0].cells.length === 1)) return;
+
+                    // Toggle sort direction
+                    sortDirection[columnIndex] = sortDirection[columnIndex] === 'asc' ? 'desc' : 'asc';
+
+                    // Update sort icons
+                    table.querySelectorAll('.sortable').forEach(th => th.classList.remove('sort-asc', 'sort-desc'));
+                    const currentTh = table.querySelector(`th:nth-child(${columnIndex + 1})`);
+                    if (currentTh) {
+                        currentTh.classList.add('sort-' + sortDirection[columnIndex]);
+                    }
+
+                    // Sort rows
+                    rows.sort((a, b) => {
+                        if (!a.cells[columnIndex] || !b.cells[columnIndex]) return 0;
+
+                        let aVal = a.cells[columnIndex].textContent.trim();
+                        let bVal = b.cells[columnIndex].textContent.trim();
+
+                        // Handle different data types based on column
+                        if (columnIndex === 2 || columnIndex === 6) { // Date columns
+                            aVal = a.cells[columnIndex].getAttribute('data-order') || aVal;
+                            bVal = b.cells[columnIndex].getAttribute('data-order') || bVal;
+                        } else if (columnIndex === 3 || columnIndex === 5) { // Amount columns
+                            aVal = parseFloat(a.cells[columnIndex].getAttribute('data-order') || aVal.replace(/[^\d.-]/g, '')) || 0;
+                            bVal = parseFloat(b.cells[columnIndex].getAttribute('data-order') || bVal.replace(/[^\d.-]/g, '')) || 0;
+                        }
+
+                        if (sortDirection[columnIndex] === 'asc') {
+                            return aVal > bVal ? 1 : -1;
+                        } else {
+                            return aVal < bVal ? 1 : -1;
+                        }
+                    });
+
+                    // Reorder rows in DOM
+                    rows.forEach(row => tbody.appendChild(row));
+                    console.log(`[v0] Table sorted by ${columnName} (${sortDirection[columnIndex]})`);
+                } catch (error) {
+                    console.error('[v0] Sort error:', error);
+                }
+            };
+
+            // Check libraries after page load
+            setTimeout(function() {
+                console.log('[v0] Library status check:');
+                console.log('[v0] XLSX available:', typeof XLSX !== 'undefined');
+                console.log('[v0] jsPDF available:', typeof window.jspdf !== 'undefined');
+                console.log('[v0] autoTable available:', typeof window.jspdf !== 'undefined' && window.jspdf.jsPDF && typeof window.jspdf.jsPDF.prototype.autoTable === 'function');
+            }, 1000);
+        });
+
+        document.addEventListener('livewire:load', function() {
+            console.log('[v0] Livewire v2 loaded - reinitializing functions');
+        });
+
+        document.addEventListener('livewire:update', function() {
+            console.log('[v0] Livewire v2 updated - functions still available');
+        });
+    </script>
 </div>

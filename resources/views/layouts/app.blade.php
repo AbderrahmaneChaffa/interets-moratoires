@@ -15,6 +15,10 @@
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/2.3.3/css/dataTables.dataTables.css" />
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/3.2.0/css/buttons.dataTables.css" />
+
     <!-- Custom CSS -->
     <style>
         :root {
@@ -420,52 +424,52 @@
 
                 <!-- Authentication Section -->
                 @auth
-                    <ul class="navbar-nav ms-auto">
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle user-dropdown" href="#" id="navbarDropdown"
-                                role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <div class="user-avatar">
-                                    <i class="fas fa-user"></i>
-                                </div>
-                                <span class="user-name">{{ Auth::user()->name ?? 'Utilisateur' }}</span>
-                            </a>
-                            <ul class="dropdown-menu dropdown-menu-end user-menu" aria-labelledby="navbarDropdown">
-                                <li>
-                                    <a class="dropdown-item" href="#">
-                                        <i class="fas fa-user-circle me-2"></i>
-                                        Mon Profil
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item" href="#">
-                                        <i class="fas fa-cog me-2"></i>
-                                        Paramètres
-                                    </a>
-                                </li>
-                                <li>
-                                    <hr class="dropdown-divider">
-                                </li>
-                                <li>
-                                    <form method="POST" action="{{ route('logout') }}" class="d-inline">
-                                        @csrf
-                                        <button type="submit" class="dropdown-item logout-btn">
-                                            <i class="fas fa-sign-out-alt me-2"></i>
-                                            Se déconnecter
-                                        </button>
-                                    </form>
-                                </li>
-                            </ul>
-                        </li>
-                    </ul>
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle user-dropdown" href="#" id="navbarDropdown"
+                            role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <div class="user-avatar">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <span class="user-name">{{ Auth::user()->name ?? 'Utilisateur' }}</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end user-menu" aria-labelledby="navbarDropdown">
+                            <li>
+                                <a class="dropdown-item" href="#">
+                                    <i class="fas fa-user-circle me-2"></i>
+                                    Mon Profil
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="#">
+                                    <i class="fas fa-cog me-2"></i>
+                                    Paramètres
+                                </a>
+                            </li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li>
+                                <form method="POST" action="{{ route('logout') }}" class="d-inline">
+                                    @csrf
+                                    <button type="submit" class="dropdown-item logout-btn">
+                                        <i class="fas fa-sign-out-alt me-2"></i>
+                                        Se déconnecter
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
                 @else
-                    <ul class="navbar-nav ms-auto">
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ route('login') }}">
-                                <i class="fas fa-sign-in-alt me-2"></i>
-                                Se connecter
-                            </a>
-                        </li>
-                    </ul>
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('login') }}">
+                            <i class="fas fa-sign-in-alt me-2"></i>
+                            Se connecter
+                        </a>
+                    </li>
+                </ul>
                 @endauth
             </div>
         </div>
@@ -480,10 +484,21 @@
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- jQuery (required for DataTables) -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+    <!-- DataTables JS -->
+    <script src="https://cdn.datatables.net/2.3.3/js/dataTables.js"></script>
+    <script src="https://cdn.datatables.net/buttons/3.2.0/js/dataTables.buttons.js"></script>
+    <script src="https://cdn.datatables.net/buttons/3.2.0/js/buttons.html5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/3.2.0/js/buttons.print.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+
     @livewireScripts
     <!-- Custom JavaScript -->
-
-
 
 </body>
 
