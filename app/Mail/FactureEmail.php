@@ -16,14 +16,14 @@ class FactureEmail extends Mailable
     public $facture;
     public $client;
     public $emailMessage;
-    public $attachments;
+    protected $attachmentsList;
 
     public function __construct(Facture $facture, Client $client, $emailMessage = null, array $attachments = [])
     {
         $this->facture = $facture;
         $this->client = $client;
         $this->emailMessage = $emailMessage;
-        $this->attachments = $attachments;
+        $this->attachmentsList = $attachments; // 👈 renommé pour éviter conflit avec méthode attachments()
     }
 
     public function build()
@@ -39,6 +39,7 @@ class FactureEmail extends Mailable
 
     public function attachments(): array
     {
-        return $this->attachments; // ici ce sont bien des objets Attachment
+        // 👇 Laravel 9 attend un array d'objets Attachment ici
+        return $this->attachmentsList;
     }
 }

@@ -366,29 +366,29 @@
                                 <i class="fas fa-paperclip"></i> Fichiers joints
                             </label>
                             <div class="border rounded p-3 bg-light">
-                                <!-- @if($selectedFacture->pdf_path)
-                                        <div class="d-flex align-items-center mb-2">
-                                            <input type="checkbox" wire:model="attachFacturePdf" class="form-check-input me-2"
-                                                id="attachFacture">
-                                            <label for="attachFacture" class="form-check-label">
-                                                <i class="fas fa-file-pdf text-danger"></i>
-                                                Facture {{ $selectedFacture->reference }}.pdf
-                                            </label>
-                                        </div>
-                                    @endif -->
+                                @if($selectedFacture->pdf_path)
+                                <div class="d-flex align-items-center mb-2">
+                                    <input type="checkbox" wire:model="attachFacturePdf" class="form-check-input me-2"
+                                        id="attachFacture">
+                                    <label for="attachFacture" class="form-check-label">
+                                        <i class="fas fa-file-pdf text-danger"></i>
+                                        Facture {{ $selectedFacture->reference }}.pdf
+                                    </label>
+                                </div>
+                                @endif
 
-                                <!-- @if($selectedFacture->interets->where('pdf_path', '!=', null)->count() > 0)
-                                        @foreach($selectedFacture->interets->where('pdf_path', '!=', null) as $interet)
-                                            <div class="d-flex align-items-center mb-2">
-                                                <input type="checkbox" wire:model="attachInteretsPdf" value="{{ $interet->id }}"
-                                                    class="form-check-input me-2" id="attachInteret{{ $interet->id }}">
-                                                <label for="attachInteret{{ $interet->id }}" class="form-check-label">
-                                                    <i class="fas fa-file-pdf text-warning"></i>
-                                                    Intérêts {{ $interet->date_debut_periode->format('m/Y') }}.pdf
-                                                </label>
-                                            </div>
-                                        @endforeach
-                                    @endif -->
+                                @if($selectedFacture->interets->where('pdf_path', '!=', null)->count() > 0)
+                                @foreach($selectedFacture->interets->where('pdf_path', '!=', null) as $interet)
+                                <div class="d-flex align-items-center mb-2">
+                                    <input type="checkbox" wire:model="attachInteretsPdf" value="{{ $interet->id }}"
+                                        class="form-check-input me-2" id="attachInteret{{ $interet->id }}">
+                                    <label for="attachInteret{{ $interet->id }}" class="form-check-label">
+                                        <i class="fas fa-file-pdf text-warning"></i>
+                                        Intérêts {{ $interet->date_debut_periode->format('m/Y') }}.pdf
+                                    </label>
+                                </div>
+                                @endforeach
+                                @endif
 
                                 @if(!$selectedFacture->pdf_path && $selectedFacture->interets->where('pdf_path', '!=', null)->count() == 0)
                                 <p class="text-muted mb-0">

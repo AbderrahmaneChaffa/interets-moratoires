@@ -119,10 +119,8 @@ class FactureList extends Component
             // Cocher par défaut la facture PDF si elle existe
             $this->attachFacturePdf = (bool) $this->selectedFacture->pdf_path;
             $this->attachInteretsPdf = [];
-
             $this->showEmailModal = true;
             $this->dispatchBrowserEvent('open-facture-email');
-
         }
     }
 
@@ -136,7 +134,6 @@ class FactureList extends Component
         $this->attachFacturePdf = true;
         $this->attachInteretsPdf = [];
         $this->dispatchBrowserEvent('close-facture-email');
-
     }
 
     public function sendEmail()
@@ -191,7 +188,6 @@ class FactureList extends Component
         $this->factureDetails = Facture::with(['client', 'interets'])->findOrFail($id);
         $this->showDetailsModal = true;
         $this->dispatchBrowserEvent('open-facture-details');
-
     }
 
     public function openEdit($id)
@@ -209,7 +205,6 @@ class FactureList extends Component
         $this->delai_legal_jours = $f->delai_legal_jours ?? 30;
         $this->showModal = true;
         $this->dispatchBrowserEvent('open-facture-modal');
-
     }
 
     public function save()
