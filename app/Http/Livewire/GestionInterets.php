@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Storage;
 class GestionInterets extends Component
 {
     use WithPagination, WithFileUploads;
-    
+
     public $factureId;
     public $facture = null;
     public $periodesInterets = [];
@@ -22,9 +22,13 @@ class GestionInterets extends Component
     public $periodeSelectionnee = null;
     public $references = [];
     public $pdfUploads = [];
-
+    // --- propriétés ---
+    public $showPayModal = false;
+    public $payInteretId = null;
     protected $listeners = ['refreshInterets' => 'refreshData'];
 
+    public $showValidateModal = false;
+    public $validateInteretId = null;
     public function mount($factureId = null)
     {
         if ($factureId) {
@@ -53,7 +57,7 @@ class GestionInterets extends Component
             }
 
             $file = $this->pdfUploads[$interetId];
-            
+
             // Debug: Check file properties
             if (!$file) {
                 session()->flash('error', 'Fichier invalide.');
@@ -90,30 +94,46 @@ class GestionInterets extends Component
             $originalName = $file->getClientOriginalName();
             $filename = time() . '_' . $interetId . '_' . $originalName;
             $path = $file->storeAs('interets_pdfs', $filename, 'public');
-            
+
             // Update database
             $interet->update(['pdf_path' => $path]);
-            
+
             // Clear the upload
             $this->pdfUploads[$interetId] = null;
-            
+
             session()->flash('message', 'PDF uploadé avec succès: ' . $originalName);
             $this->calculerPeriodes();
-            
         } catch (\Exception $e) {
             session()->flash('error', 'Erreur lors de l\'upload: ' . $e->getMessage());
         }
     }
 
-    public function validerInteret($id)
+
+    public function openValidateModal($id)
     {
-        $interet = Interet::find($id);
-        if ($interet) {
-            $interet->update(['valide' => true]);
-            session()->flash('message', 'Intérêt validé avec succès.');
-        }
+        $this->validateInteretId = $id;
+        $this->showValidateModal = true;
     }
-    
+
+    public function confirmValiderInteret()
+    {
+        $interet = Interet::find($this->validateInteretId);
+
+        if ($interet && !$interet->valide) {
+            $interet->update(['valide' => true]); // juste valider le calcul
+            session()->flash('message', 'Calcul validé avec succès.');
+        } elseif ($interet && $interet->valide) {
+            session()->flash('info', 'Ce calcul est déjà validé.');
+        }
+
+        $this->showValidateModal = false;
+        $this->validateInteretId = null;
+
+        $this->loadFacture(); // recharge la table
+        $this->emit('refreshInterets');
+    }
+
+
     public function loadFacture()
     {
         if ($this->factureId) {
@@ -139,7 +159,7 @@ class GestionInterets extends Component
         }
 
         $this->periodesInterets = InteretService::getInteretsCalcules($this->facture);
-        
+
         // Ensure dates are Carbon objects for proper formatting in Blade
         foreach ($this->periodesInterets as &$periode) {
             if (is_string($periode['date_debut_periode'])) {
@@ -196,11 +216,60 @@ class GestionInterets extends Component
     public function supprimerInteret($interetId)
     {
         $interet = Interet::findOrFail($interetId);
-        $interet->delete();
+        $interet->forceDelete();
 
         session()->flash('message', 'Intérêt supprimé avec succès.');
         $this->loadFacture();
         $this->emit('refreshInterets');
+    }
+
+
+
+    // --- ouvrir le modal ---
+    public function openPayModal($interetId)
+    {
+        $this->payInteretId = $interetId;
+        $this->showPayModal = true;
+    }
+
+    // --- confirmer le paiement ---
+    public function confirmRendrePaye()
+    {
+        if (!$this->payInteretId) {
+            $this->showPayModal = false;
+            return;
+        }
+
+        $interet = Interet::find($this->payInteretId);
+
+        if (!$interet) {
+            session()->flash('error', 'Intérêt introuvable.');
+            $this->resetPayModal();
+            return;
+        }
+
+        if ($interet->statut === 'Payée') {
+            session()->flash('info', 'Cet intérêt est déjà marqué comme payé.');
+            $this->resetPayModal();
+            return;
+        }
+
+        $interet->update([
+            'statut' => 'Payée',
+        ]);
+
+        session()->flash('message', 'Intérêt marqué comme payé avec succès.');
+
+        $this->resetPayModal();
+        $this->loadFacture();      // rafraîchir la facture
+        $this->emit('refreshInterets');
+    }
+
+    // --- reset modal ---
+    private function resetPayModal()
+    {
+        $this->showPayModal = false;
+        $this->payInteretId = null;
     }
 
     public function refreshData()
