@@ -244,10 +244,10 @@ class FactureList extends Component
     public function delete()
     {
         $f = Facture::findOrFail($this->facture_id);
-        if ($f->type !== 'principale') {
-            session()->flash('error', 'Suppression autorisée uniquement pour les factures principales.');
-            return;
-        }
+        // if ($f->type !== 'principale') {
+        //     session()->flash('error', 'Suppression autorisée uniquement pour les factures principales.');
+        //     return;
+        // }
         $f->delete();
         $this->showDeleteModal = false;
         $this->dispatchBrowserEvent('close-facture-delete');

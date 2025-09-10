@@ -58,7 +58,7 @@ class FactureForm extends Component
 
         try {
             if ($this->facture_pdf) {
-                $pdfPath = $this->facture_pdf->store('factures','public');;
+                $pdfPath = $this->facture_pdf->store('factures', 'public');;
             }
 
             // Créer la facture
@@ -66,7 +66,7 @@ class FactureForm extends Component
                 'client_id' => $this->client_id,
                 'reference' => $this->reference,
                 'prestation' => $this->prestation,
-                'type' => 'principale',
+
                 'date_facture' => $this->date_facture,
                 'montant_ht' => $this->montant_ht,
                 'date_depot' => $this->date_depot,
@@ -83,7 +83,7 @@ class FactureForm extends Component
                 session()->flash('message', 'Facture créée avec succès. Statut: ' . $resultat['statut'] . ', Intérêts: ' . number_format($resultat['interets'], 2) . ' DA');
             } else {
                 // Calculer les intérêts même si le statut est manuel
-                $facture->calculerInterets();
+                //$facture->calculerInterets();
                 $facture->save();
                 session()->flash('message', 'Facture créée avec succès.');
             }
@@ -119,7 +119,7 @@ class FactureForm extends Component
     {
         $statuts = Facture::getStatutsDisponibles();
         $clients = Client::orderBy('raison_sociale')->get();
-       // dd($clients);
-        return view('livewire.facture-form', compact('statuts','clients'));
+        // dd($clients);
+        return view('livewire.facture-form', compact('statuts', 'clients'));
     }
 }

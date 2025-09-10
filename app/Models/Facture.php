@@ -16,7 +16,7 @@ class Facture extends Model
     protected $fillable = [
         'client_id',
         'parent_id',
-        'type',
+        //'type',
         'prestation',
         'reference',
         'date_facture',
