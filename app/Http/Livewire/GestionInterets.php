@@ -5,6 +5,7 @@ namespace App\Http\Livewire;
 use Livewire\Component;
 use App\Models\Facture;
 use App\Models\Interet;
+use App\Models\Releve;
 use App\Services\InteretService;
 use Carbon\Carbon;
 use Livewire\WithFileUploads;
@@ -17,6 +18,8 @@ class GestionInterets extends Component
 
     public $factureId;
     public $facture = null;
+    public $releveId = null;
+    public $releve = null;
     public $periodesInterets = [];
     public $showCalculModal = false;
     public $periodeSelectionnee = null;
@@ -29,8 +32,11 @@ class GestionInterets extends Component
 
     public $showValidateModal = false;
     public $validateInteretId = null;
-    public function mount($factureId = null)
+    public function mount($factureId = null, $releveId = null)
     {
+        if ($releveId) {
+            $this->releveId = $releveId;
+        }
         if ($factureId) {
             $this->factureId = $factureId;
             $this->loadFacture();
@@ -138,6 +144,12 @@ class GestionInterets extends Component
     {
         if ($this->factureId) {
             $this->facture = Facture::with(['client', 'interets'])->find($this->factureId);
+            if ($this->releveId) {
+                $this->releve = Releve::with('factures')->find($this->releveId);
+            } else if ($this->facture && $this->facture->releve_id) {
+                $this->releve = Releve::with('factures')->find($this->facture->releve_id);
+                $this->releveId = $this->releve?->id;
+            }
             $this->calculerPeriodes();
             $this->initializeReferences();
         }
@@ -158,7 +170,25 @@ class GestionInterets extends Component
             return;
         }
 
-        $this->periodesInterets = InteretService::getInteretsCalcules($this->facture);
+        if ($this->releve) {
+            // Les intérêts sont pilotés par le relevé: on affiche les périodes déjà créées pour ce relevé
+            $this->periodesInterets = [];
+            $interets = Interet::where('releve_id', $this->releve->id)
+                ->orderBy('date_debut_periode')
+                ->get();
+            $mois = 1;
+            foreach ($interets as $interet) {
+                $this->periodesInterets[] = [
+                    'mois' => $mois++,
+                    'date_debut_periode' => $interet->date_debut_periode,
+                    'date_fin_periode' => $interet->date_fin_periode,
+                    'interet_existant' => $interet,
+                    'peut_calculer' => false,
+                ];
+            }
+        } else {
+            $this->periodesInterets = InteretService::getInteretsCalcules($this->facture);
+        }
 
         // Ensure dates are Carbon objects for proper formatting in Blade
         foreach ($this->periodesInterets as &$periode) {
@@ -180,7 +210,11 @@ class GestionInterets extends Component
             return;
         }
 
-        $interetsCrees = InteretService::calculerEtSauvegarderTousInterets($facture);
+        if ($this->releve) {
+            $interetsCrees = $this->releve->calculerInterets();
+        } else {
+            $interetsCrees = InteretService::calculerEtSauvegarderTousInterets($facture);
+        }
 
         if (empty($interetsCrees)) {
             session()->flash('info', 'Tous les intérêts pour cette facture ont déjà été calculés.');
@@ -202,6 +236,11 @@ class GestionInterets extends Component
         $dateFin = Carbon::parse($dateFin);
 
         $interet = InteretService::calculerEtSauvegarderInterets($this->facture, $dateDebut, $dateFin);
+        if ($interet && $this->releve) {
+            // Désormais, les périodes sont créées par le relevé globalement
+            $interet->delete();
+            session()->flash('info', 'Le calcul par période se fait désormais au niveau du relevé.');
+        }
 
         if ($interet) {
             session()->flash('message', 'Intérêt calculé et sauvegardé pour cette période.');

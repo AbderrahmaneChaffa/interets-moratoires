@@ -42,6 +42,11 @@ class Facture extends Model
         return $this->belongsTo(Client::class)->withTrashed();
     }
 
+    public function releve()
+    {
+        return $this->belongsTo(Releve::class);
+    }
+
 
 
     public function interets()

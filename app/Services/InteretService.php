@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Facture;
 use App\Models\Interet;
+use App\Models\Releve;
 use Carbon\Carbon;
 
 class InteretService
@@ -115,6 +116,41 @@ class InteretService
     }
 
     /**
+     * Générer les périodes d'intérêts bornées par les dates d'un relevé
+     */
+    public static function genererPeriodesInteretsPourReleve(Facture $facture, Releve $releve): array
+    {
+        $periodes = self::genererPeriodesInterets($facture);
+
+        if (empty($periodes)) {
+            return [];
+        }
+
+        $dateDebutReleve = $releve->date_debut instanceof Carbon ? $releve->date_debut : Carbon::parse($releve->date_debut);
+        $dateFinReleve = $releve->date_fin instanceof Carbon ? $releve->date_fin : Carbon::parse($releve->date_fin);
+
+        $bornees = [];
+        foreach ($periodes as $periode) {
+            $debut = $periode['date_debut_periode'];
+            $fin = $periode['date_fin_periode'];
+
+            // intersection [debut, fin] ∩ [dateDebutReleve, dateFinReleve]
+            $interDebut = $debut->greaterThan($dateDebutReleve) ? $debut : $dateDebutReleve->copy();
+            $interFin = $fin->lessThan($dateFinReleve) ? $fin : $dateFinReleve->copy();
+
+            if ($interDebut < $interFin) {
+                $bornees[] = [
+                    'mois' => $periode['mois'],
+                    'date_debut_periode' => $interDebut,
+                    'date_fin_periode' => $interFin,
+                ];
+            }
+        }
+
+        return $bornees;
+    }
+
+    /**
      * Calculer et sauvegarder les intérêts pour une période
      */
     public static function calculerEtSauvegarderInterets(Facture $facture, Carbon $dateDebut, Carbon $dateFin): ?Interet
@@ -133,6 +169,48 @@ class InteretService
             'interet_ht' => $resultat['interet_ht'],
             'interet_ttc' => $resultat['interet_ttc'],
         ]);
+    }
+
+    /**
+     * Calculer et sauvegarder tous les intérêts pour une facture, bornés au relevé.
+     */
+    public static function calculerEtSauvegarderTousInteretsPourReleve(Releve $releve, Facture $facture): array
+    {
+        $periodes = self::genererPeriodesInteretsPourReleve($facture, $releve);
+        $interetsCrees = [];
+
+        foreach ($periodes as $periode) {
+            $interet = self::calculerEtSauvegarderInterets(
+                $facture,
+                $periode['date_debut_periode'],
+                $periode['date_fin_periode']
+            );
+
+            if ($interet) {
+                // attacher au relevé
+                $interet->releve_id = $releve->id;
+                $interet->save();
+                $interetsCrees[] = $interet;
+            }
+        }
+
+        return $interetsCrees;
+    }
+
+    /**
+     * Calculer et sauvegarder les intérêts pour toutes les factures d'un relevé
+     */
+    public static function calculerPourReleve(Releve $releve): array
+    {
+        $releve->loadMissing('factures.client');
+        $crees = [];
+        foreach ($releve->factures as $facture) {
+            if (!$facture->peutGenererInterets()) {
+                continue;
+            }
+            $crees = array_merge($crees, self::calculerEtSauvegarderTousInteretsPourReleve($releve, $facture));
+        }
+        return $crees;
     }
 
     /**

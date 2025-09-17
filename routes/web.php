@@ -5,6 +5,7 @@ use App\Http\Controllers\FacturePdfController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\EmailController;
 use App\Http\Controllers\GestionInteretsController;
+use App\Http\Controllers\ReleveInteretsController;
 use App\Http\Livewire\ClientCrud;
 use App\Http\Livewire\FactureForm;
 use App\Http\Livewire\FactureList;
@@ -45,8 +46,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/factures', FactureList::class)->name('factures');
     Route::get('/factures/tableau', FactureTable::class)->name('factures.tableau');
 
-    // Gestion des intérêts moratoires
-    Route::get('/factures/{facture}/interets', [GestionInteretsController::class, 'show'])->name('factures.interets');
+    // Relevés d'intérêts moratoires
+    Route::get('/releves/{releve}/interets', [ReleveInteretsController::class, 'show'])->name('releves.interets');
 
     // Upload du PDF pour une facture
     Route::post('/factures/{facture}/upload-pdf', [FacturePdfController::class, 'upload'])->name('factures.upload_pdf');

@@ -39,6 +39,11 @@ class Interet extends Model
         return $this->belongsTo(Facture::class);
     }
 
+    public function releve()
+    {
+        return $this->belongsTo(Releve::class);
+    }
+
     /**
      * Formater le montant en DA
      */

@@ -29,6 +29,11 @@ class Client extends Model
         return $this->hasMany(Facture::class);
     }
 
+    public function releves()
+    {
+        return $this->hasMany(Releve::class);
+    }
+
     /**
      * Calcule les intérêts pour une facture selon la formule du client.
      * Stocke le résultat (DA) dans $facture->interets sans sauvegarder.
