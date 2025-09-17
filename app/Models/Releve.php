@@ -13,10 +13,13 @@ class Releve extends Model
 
     protected $fillable = [
         'client_id',
+        'reference',
         'date_debut',
         'date_fin',
         'date_creation',
         'statut',
+        'categorie',
+        'montant_total_ht',
     ];
 
     protected $casts = [
