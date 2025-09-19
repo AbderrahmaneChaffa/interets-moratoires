@@ -19,18 +19,22 @@
                             <div class="stat-label">Clients</div>
                         </div>
                         <div class="stat-item">
-                            <div class="stat-number">{{ $totalFactures ?? '0' }}</div>
-                            <div class="stat-label">Factures</div>
+                            <div class="stat-number">{{ $totalReleves ?? '0' }}</div>
+                            <div class="stat-label">Relevés</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">{{ $totalFacturesInReleves ?? '0' }}</div>
+                            <div class="stat-label">Factures dans relevés</div>
                         </div>
                         <div class="stat-item">
                             <div class="stat-number">{{ number_format($totalInterets ?? 0, 2) }} DA</div>
-                            <div class="stat-label">Intérêts</div>
+                            <div class="stat-label">Intérêts totaux</div>
                         </div>
                     </div>
                     <div class="hero-actions">
-                        <a href="{{ route('factures.creer') }}" class="btn btn-primary btn-lg me-3">
+                        <a href="{{ route('releves.creer') }}" class="btn btn-primary btn-lg me-3">
                             <i class="fas fa-plus-circle me-2"></i>
-                            Créer une Facture
+                            Créer un Relevé
                         </a>
                         <a href="{{ route('factures') }}" class="btn btn-outline-primary btn-lg">
                             <i class="fas fa-chart-bar me-2"></i>
@@ -54,6 +58,30 @@
         <div class="col-lg-3 col-md-6">
             <div class="feature-card h-100">
                 <div class="feature-icon bg-primary">
+                    <i class="fas fa-list-alt"></i>
+                </div>
+                <div class="feature-content">
+                    <h5 class="feature-title">Créer Relevé</h5>
+                    <p class="feature-description">
+                        Créez rapidement de nouveaux relevés avec factures et calcul automatique des intérêts moratoires.
+                    </p>
+                    <div class="feature-stats mb-3">
+                        <small class="text-muted">
+                            <i class="fas fa-calculator me-1"></i>
+                            Calcul automatique des intérêts
+                        </small>
+                    </div>
+                    <a href="{{ route('releves.creer') }}" class="btn btn-primary btn-sm">
+                        <i class="fas fa-plus me-1"></i>
+                        Créer
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6">
+            <div class="feature-card h-100">
+                <div class="feature-icon bg-success">
                     <i class="fas fa-users"></i>
                 </div>
                 <div class="feature-content">
@@ -67,7 +95,7 @@
                             Dernière création: {{ $lastClientDate ?? 'Aucune' }}
                         </small>
                     </div>
-                    <a href="{{ route('clients') }}" class="btn btn-primary btn-sm">
+                    <a href="{{ route('clients') }}" class="btn btn-success btn-sm">
                         <i class="fas fa-arrow-right me-1"></i>
                         Accéder
                     </a>
@@ -77,7 +105,7 @@
 
         <div class="col-lg-3 col-md-6">
             <div class="feature-card h-100">
-                <div class="feature-icon bg-success">
+                <div class="feature-icon bg-info">
                     <i class="fas fa-file-invoice-dollar"></i>
                 </div>
                 <div class="feature-content">
@@ -91,33 +119,9 @@
                             Création en moins de 2 minutes
                         </small>
                     </div>
-                    <a href="{{ route('factures.creer') }}" class="btn btn-success btn-sm">
+                    <a href="{{ route('factures.creer') }}" class="btn btn-info btn-sm">
                         <i class="fas fa-plus me-1"></i>
                         Créer
-                    </a>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-lg-3 col-md-6">
-            <div class="feature-card h-100">
-                <div class="feature-icon bg-info">
-                    <i class="fas fa-list-alt"></i>
-                </div>
-                <div class="feature-content">
-                    <h5 class="feature-title">Liste Factures</h5>
-                    <p class="feature-description">
-                        Consultez toutes vos factures et calculez automatiquement les intérêts moratoires.
-                    </p>
-                    <div class="feature-stats mb-3">
-                        <small class="text-muted">
-                            <i class="fas fa-calculator me-1"></i>
-                            Calcul automatique des intérêts
-                        </small>
-                    </div>
-                    <a href="{{ route('factures') }}" class="btn btn-info btn-sm">
-                        <i class="fas fa-eye me-1"></i>
-                        Consulter
                     </a>
                 </div>
             </div>
@@ -181,9 +185,9 @@
                         <div class="empty-state text-center py-4">
                             <i class="fas fa-history fa-3x text-muted mb-3"></i>
                             <h6 class="text-muted">Aucune activité récente</h6>
-                            <p class="text-muted small">Commencez par créer votre première facture</p>
-                            <a href="{{ route('factures.creer') }}" class="btn btn-primary btn-sm">
-                                Créer une facture
+                            <p class="text-muted small">Commencez par créer votre premier relevé</p>
+                            <a href="{{ route('releves.creer') }}" class="btn btn-primary btn-sm">
+                                Créer un relevé
                             </a>
                         </div>
                     @endif
@@ -201,8 +205,8 @@
                 </div>
                 <div class="card-body">
                     <div class="summary-item">
-                        <div class="summary-label">Factures ce mois</div>
-                        <div class="summary-value text-primary">{{ $monthlyInvoices ?? '0' }}</div>
+                        <div class="summary-label">Relevés ce mois</div>
+                        <div class="summary-value text-primary">{{ $monthlyReleves ?? '0' }}</div>
                     </div>
                     <div class="summary-item">
                         <div class="summary-label">Intérêts calculés</div>
@@ -265,8 +269,9 @@
 
         .hero-stats {
             display: flex;
-            gap: 2rem;
+            gap: 1.5rem;
             margin: 2rem 0;
+            flex-wrap: wrap;
         }
 
         .stat-item {
@@ -274,14 +279,14 @@
         }
 
         .stat-number {
-            font-size: 2rem;
+            font-size: 1.8rem;
             font-weight: 700;
             color: var(--primary-color);
             line-height: 1;
         }
 
         .stat-label {
-            font-size: 0.875rem;
+            font-size: 0.8rem;
             color: var(--secondary-color);
             font-weight: 500;
         }

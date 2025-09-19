@@ -1,3 +1,4 @@
+@section('title', 'Créer Un Releve')
 <div>
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
@@ -14,7 +15,7 @@
                         <select class="form-select" wire:model="client_id" required>
                             <option value="">-- Sélectionner --</option>
                             @foreach($clients as $c)
-                                <option value="{{ $c->id }}">{{ $c->raison_sociale }}</option>
+                            <option value="{{ $c->id }}">{{ $c->raison_sociale }}</option>
                             @endforeach
                         </select>
                         @error('client_id')<div class="text-danger small">{{ $message }}</div>@enderror
@@ -43,7 +44,8 @@
 
                     <div class="col-md-6">
                         <label class="form-label">Catégorie</label>
-                        <input type="text" class="form-control" wire:model="categorie" placeholder="Contrat de location GAB">
+                        <input type="text" class="form-control" wire:model="categorie"
+                            placeholder="Contrat de location GAB">
                         @error('categorie')<div class="text-danger small">{{ $message }}</div>@enderror
                     </div>
                     <div class="col-md-3">
@@ -55,7 +57,7 @@
                         <label class="form-label">Statut</label>
                         <select class="form-select" wire:model="statut" required>
                             @foreach($statuts as $key => $label)
-                                <option value="{{ $key }}">{{ $label }}</option>
+                            <option value="{{ $key }}">{{ $label }}</option>
                             @endforeach
                         </select>
                         @error('statut')<div class="text-danger small">{{ $message }}</div>@enderror
@@ -85,36 +87,49 @@
                         </thead>
                         <tbody>
                             @forelse($factures as $index => $f)
-                                <tr>
-                                    <td>
-                                        <input type="text" class="form-control form-control-sm" wire:model="factures.{{ $index }}.reference">
-                                        @error('factures.'.$index.'.reference')<div class="text-danger small">{{ $message }}</div>@enderror
-                                    </td>
-                                    <td>
-                                        <input type="date" class="form-control form-control-sm" wire:model="factures.{{ $index }}.date_facture">
-                                        @error('factures.'.$index.'.date_facture')<div class="text-danger small">{{ $message }}</div>@enderror
-                                    </td>
-                                    <td>
-                                        <input type="number" step="0.01" class="form-control form-control-sm text-end" wire:model="factures.{{ $index }}.montant_ht">
-                                        @error('factures.'.$index.'.montant_ht')<div class="text-danger small">{{ $message }}</div>@enderror
-                                    </td>
-                                    <td>
-                                        <input type="number" step="0.01" class="form-control form-control-sm text-end" wire:model="factures.{{ $index }}.reste_a_payer">
-                                        @error('factures.'.$index.'.reste_a_payer')<div class="text-danger small">{{ $message }}</div>@enderror
-                                    </td>
-                                    <td>
-                                        <input type="text" class="form-control form-control-sm" wire:model="factures.{{ $index }}.categorie">
-                                    </td>
-                                    <td class="text-end">
-                                        <button type="button" class="btn btn-sm btn-outline-danger" wire:click="removeFacture({{ $index }})">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </td>
-                                </tr>
+                            <tr>
+                                <td>
+                                    <input type="text" class="form-control form-control-sm"
+                                        wire:model="factures.{{ $index }}.reference">
+                                    @error('factures.'.$index.'.reference')<div class="text-danger small">{{ $message }}
+                                    </div>@enderror
+                                </td>
+                                <td>
+                                    <input type="date" class="form-control form-control-sm"
+                                        wire:model="factures.{{ $index }}.date_facture">
+                                    @error('factures.'.$index.'.date_facture')<div class="text-danger small">
+                                        {{ $message }}
+                                    </div>@enderror
+                                </td>
+                                <td>
+                                    <input type="number" step="0.01" class="form-control form-control-sm text-end"
+                                        wire:model="factures.{{ $index }}.montant_ht">
+                                    @error('factures.'.$index.'.montant_ht')<div class="text-danger small">
+                                        {{ $message }}
+                                    </div>@enderror
+                                </td>
+                                <td>
+                                    <input type="number" step="0.01" class="form-control form-control-sm text-end"
+                                        wire:model="factures.{{ $index }}.reste_a_payer">
+                                    @error('factures.'.$index.'.reste_a_payer')<div class="text-danger small">
+                                        {{ $message }}
+                                    </div>@enderror
+                                </td>
+                                <td>
+                                    <input type="text" class="form-control form-control-sm"
+                                        wire:model="factures.{{ $index }}.categorie">
+                                </td>
+                                <td class="text-end">
+                                    <button type="button" class="btn btn-sm btn-outline-danger"
+                                        wire:click="removeFacture({{ $index }})">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
                             @empty
-                                <tr>
-                                    <td colspan="6" class="text-center text-muted">Aucune facture ajoutée.</td>
-                                </tr>
+                            <tr>
+                                <td colspan="6" class="text-center text-muted">Aucune facture ajoutée.</td>
+                            </tr>
                             @endforelse
                         </tbody>
                     </table>
@@ -129,5 +144,3 @@
         </div>
     </div>
 </div>
-
-

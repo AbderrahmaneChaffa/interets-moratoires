@@ -46,6 +46,8 @@ Route::middleware(['auth'])->group(function () {
     // Remplacer la création de facture par création de relevé
     Route::get('/releves/creer', ReleveForm::class)->name('releves.creer');
     Route::get('/factures', FactureList::class)->name('factures');
+    Route::get('/factures/creer', FactureForm::class)->name('factures.creer');
+
     Route::get('/factures/tableau', FactureTable::class)->name('factures.tableau');
 
     // Relevés d'intérêts moratoires
