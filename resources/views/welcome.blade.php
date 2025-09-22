@@ -36,9 +36,9 @@
                             <i class="fas fa-plus-circle me-2"></i>
                             Créer un Relevé
                         </a>
-                        <a href="{{ route('factures') }}" class="btn btn-outline-primary btn-lg">
-                            <i class="fas fa-chart-bar me-2"></i>
-                            Voir les Rapports
+                        <a href="{{ route('releves') }}" class="btn btn-outline-primary btn-lg">
+                            <i class="fas fa-list me-2"></i>
+                            Voir les Relevés
                         </a>
                     </div>
                 </div>
@@ -109,19 +109,19 @@
                     <i class="fas fa-file-invoice-dollar"></i>
                 </div>
                 <div class="feature-content">
-                    <h5 class="feature-title">Créer Facture</h5>
+                    <h5 class="feature-title">Gérer Factures</h5>
                     <p class="feature-description">
-                        Créez rapidement de nouvelles factures avec auto-complétion client et calcul automatique.
+                        Consultez et gérez les factures existantes avec upload PDF et gestion des intérêts.
                     </p>
                     <div class="feature-stats mb-3">
                         <small class="text-muted">
-                            <i class="fas fa-clock me-1"></i>
-                            Création en moins de 2 minutes
+                            <i class="fas fa-list me-1"></i>
+                            Vue d'ensemble complète
                         </small>
                     </div>
-                    <a href="{{ route('factures.creer') }}" class="btn btn-info btn-sm">
-                        <i class="fas fa-plus me-1"></i>
-                        Créer
+                    <a href="{{ route('factures') }}" class="btn btn-info btn-sm">
+                        <i class="fas fa-arrow-right me-1"></i>
+                        Consulter
                     </a>
                 </div>
             </div>

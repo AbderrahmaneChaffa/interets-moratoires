@@ -400,13 +400,13 @@
                             Gestion Clients
                         </a>
                     </li>
-                    <li class="nav-item">
+                    {{-- <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('factures.creer') ? 'active' : '' }}"
                             href="{{ route('factures.creer') }}">
                             <i class="fas fa-plus-circle me-2"></i>
                             Créer Facture
                         </a>
-                    </li>
+                    </li> --}}
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('releves.creer') ? 'active' : '' }}"
                             href="{{ route('releves.creer') }}">
@@ -415,10 +415,10 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('factures') ? 'active' : '' }}"
-                            href="{{ route('factures') }}">
+                        <a class="nav-link {{ request()->routeIs('releves') ? 'active' : '' }}"
+                            href="{{ route('releves') }}">
                             <i class="fas fa-file-invoice me-2"></i>
-                            Liste Factures
+                            Liste Releves
                         </a>
                     </li>
                     <!-- <li class="nav-item">

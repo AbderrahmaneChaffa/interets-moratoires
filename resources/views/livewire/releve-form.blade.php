@@ -64,6 +64,21 @@
                     </div>
                 </div>
 
+                <div class="row g-3 mt-2">
+                    <div class="col-md-6">
+                        <label class="form-label">Date de dernière facture</label>
+                        <input type="date" class="form-control" wire:model="date_derniere_facture">
+                        @error('date_derniere_facture')<div class="text-danger small">{{ $message }}</div>@enderror
+                        <small class="text-muted">Sera automatiquement calculée si des factures sont ajoutées</small>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">PDF du relevé (optionnel)</label>
+                        <input type="file" class="form-control" wire:model="releve_pdf" accept=".pdf">
+                        @error('releve_pdf')<div class="text-danger small">{{ $message }}</div>@enderror
+                        <small class="text-muted">Fichier PDF uniquement, max 2MB</small>
+                    </div>
+                </div>
+
                 <hr>
 
                 <div class="d-flex justify-content-between align-items-center mb-2">
@@ -82,6 +97,7 @@
                                 <th class="text-end">Montant HT</th>
                                 <th class="text-end">Reste à payer</th>
                                 <th>Catégorie</th>
+                                <th>PDF</th>
                                 <th></th>
                             </tr>
                         </thead>
@@ -119,6 +135,11 @@
                                     <input type="text" class="form-control form-control-sm"
                                         wire:model="factures.{{ $index }}.categorie">
                                 </td>
+                                <td>
+                                    <input type="file" class="form-control form-control-sm"
+                                        wire:model="factures.{{ $index }}.pdf_file" accept=".pdf">
+                                    @error('factures.'.$index.'.pdf_file')<div class="text-danger small">{{ $message }}</div>@enderror
+                                </td>
                                 <td class="text-end">
                                     <button type="button" class="btn btn-sm btn-outline-danger"
                                         wire:click="removeFacture({{ $index }})">
@@ -128,7 +149,7 @@
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="6" class="text-center text-muted">Aucune facture ajoutée.</td>
+                                <td colspan="7" class="text-center text-muted">Aucune facture ajoutée.</td>
                             </tr>
                             @endforelse
                         </tbody>

@@ -20,12 +20,15 @@ class Releve extends Model
         'statut',
         'categorie',
         'montant_total_ht',
+        'date_derniere_facture',
+        'releve_pdf',
     ];
 
     protected $casts = [
         'date_debut' => 'date',
         'date_fin' => 'date',
         'date_creation' => 'date',
+        'date_derniere_facture' => 'date',
     ];
 
     public function client()

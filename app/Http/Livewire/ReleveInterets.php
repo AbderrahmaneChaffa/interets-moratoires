@@ -59,6 +59,36 @@ class ReleveInterets extends Component
         $this->dispatchBrowserEvent('notification', ['message' => 'Intérêts du relevé calculés.']);
     }
 
+    public function validerInteret($interetId)
+    {
+        $interet = Interet::findOrFail($interetId);
+        $interet->update(['valide' => true]);
+        $this->refreshPeriodes();
+        session()->flash('message', 'Intérêt validé avec succès.');
+    }
+
+    public function supprimerInteret($interetId)
+    {
+        $interet = Interet::findOrFail($interetId);
+        $interet->delete();
+        $this->refreshPeriodes();
+        session()->flash('message', 'Intérêt supprimé avec succès.');
+    }
+
+    public function marquerRelevePaye()
+    {
+        $this->releve->update(['statut' => 'Payé']);
+        $this->releve->refresh();
+        session()->flash('message', 'Relevé marqué comme payé.');
+    }
+
+    public function marquerReleveImpaye()
+    {
+        $this->releve->update(['statut' => 'Impayé']);
+        $this->releve->refresh();
+        session()->flash('message', 'Relevé marqué comme impayé.');
+    }
+
     public function render()
     {
         return view('livewire.releve-interets');

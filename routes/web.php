@@ -10,6 +10,7 @@ use App\Http\Livewire\ClientCrud;
 use App\Http\Livewire\FactureForm;
 use App\Http\Livewire\ReleveForm;
 use App\Http\Livewire\FactureList;
+use App\Http\Livewire\ReleveList;
 use App\Http\Livewire\FactureTable;
 use App\Http\Livewire\RapportInterets;
 use App\Http\Livewire\GestionInterets;
@@ -41,10 +42,12 @@ Route::middleware(['auth'])->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    // Tes anciennes routes Livewire
+    // Routes Livewire
     Route::get('/clients', ClientCrud::class)->name('clients');
-    // Remplacer la création de facture par création de relevé
+    // Routes pour les relevés (remplace les factures)
+    Route::get('/releves', ReleveList::class)->name('releves');
     Route::get('/releves/creer', ReleveForm::class)->name('releves.creer');
+    // Routes pour les factures (conservées pour compatibilité)
     Route::get('/factures', FactureList::class)->name('factures');
     Route::get('/factures/creer', FactureForm::class)->name('factures.creer');
 
@@ -57,6 +60,23 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/factures/{facture}/upload-pdf', [FacturePdfController::class, 'upload'])->name('factures.upload_pdf');
     // Envoi d'email pour une facture
     Route::post('/factures/{facture}/send-email', [EmailController::class, 'sendFactureEmail'])->name('factures.send_email');
+    
+    // Affichage des PDFs
+    Route::get('/storage/releves/{filename}', function ($filename) {
+        $path = storage_path('app/public/releves/' . $filename);
+        if (!file_exists($path)) {
+            abort(404);
+        }
+        return response()->file($path);
+    })->name('releves.pdf');
+    
+    Route::get('/storage/factures/{filename}', function ($filename) {
+        $path = storage_path('app/public/factures/' . $filename);
+        if (!file_exists($path)) {
+            abort(404);
+        }
+        return response()->file($path);
+    })->name('factures.pdf');
 
     // Rapport intérêts par client
     Route::get('/clients/{client}/rapport-interets', RapportInterets::class)->name('clients.rapport_interets');

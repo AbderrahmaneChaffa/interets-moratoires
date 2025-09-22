@@ -255,6 +255,9 @@ class FactureList extends Component
         session()->flash('message', 'Facture supprimée avec succès.');
     }
 
+    // MÉTHODE DÉPRÉCIÉE - Les intérêts sont maintenant calculés au niveau du relevé
+    // Utiliser plutôt la méthode calculerInterets() du modèle Releve
+    /*
     public function calculerInteret($factureId)
     {
         $facture = Facture::with('client')->findOrFail($factureId);
@@ -272,7 +275,10 @@ class FactureList extends Component
             session()->flash('message', count($interetsCrees) . ' période(s) d\'intérêts calculée(s) et sauvegardée(s).');
         }
     }
+    */
 
+    // MÉTHODE DÉPRÉCIÉE - Les intérêts sont maintenant calculés au niveau du relevé
+    /*
     public function calculerInteretPeriode($factureId, $dateDebut, $dateFin)
     {
         $facture = Facture::with('client')->findOrFail($factureId);
@@ -287,6 +293,7 @@ class FactureList extends Component
             session()->flash('info', 'Intérêt déjà calculé pour cette période.');
         }
     }
+    */
 
     public function exportExcel()
     {
