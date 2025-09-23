@@ -15,8 +15,8 @@ class Facture extends Model
     protected $dates = ['deleted_at'];
     protected $fillable = [
         'client_id',
+        'releve_id',
         'parent_id',
-        //'type',
         'prestation',
         'reference',
         'date_facture',

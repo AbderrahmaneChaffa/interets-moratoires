@@ -183,5 +183,3 @@ class ReleveForm extends Component
         return view('livewire.releve-form', compact('clients', 'statuts'));
     }
 }
-
-

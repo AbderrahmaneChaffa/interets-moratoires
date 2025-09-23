@@ -13,6 +13,7 @@ class Releve extends Model
 
     protected $fillable = [
         'client_id',
+
         'reference',
         'date_debut',
         'date_fin',
@@ -22,6 +23,7 @@ class Releve extends Model
         'montant_total_ht',
         'date_derniere_facture',
         'releve_pdf',
+        
     ];
 
     protected $casts = [
@@ -172,5 +174,3 @@ class Releve extends Model
         return $interetsCrees;
     }
 }
-
-

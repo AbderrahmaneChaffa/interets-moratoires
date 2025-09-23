@@ -15,6 +15,7 @@ class Interet extends Model
     protected $dates = ['deleted_at'];
     protected $fillable = [
         'facture_id',
+        'releve_id',
         'reference',
         'date_debut_periode',
         'date_fin_periode',
