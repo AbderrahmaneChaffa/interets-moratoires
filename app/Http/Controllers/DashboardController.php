@@ -15,7 +15,7 @@ class DashboardController extends Controller
         $totalClients = Client::count();
         $totalReleves = Releve::count();
         $totalFacturesInReleves = Facture::whereNotNull('releve_id')->count();
-        $totalInterets = Interet::sum('interet_ht');
+        $totalInterets = Interet::where('valide', true)->sum('interet_ht');
 
         $lastClient = Client::latest()->first();
         $lastClientDate = $lastClient ? $lastClient->created_at->format('d/m/Y') : 'Aucune';
@@ -28,7 +28,7 @@ class DashboardController extends Controller
         // Activités récentes incluant les relevés et factures
         $recentReleves = Releve::latest()->take(3)->get();
         $recentFactures = Facture::latest()->take(2)->get();
-        
+
         $recentActivities = collect()
             ->merge($recentReleves->map(function ($releve) {
                 return [

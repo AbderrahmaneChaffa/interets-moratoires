@@ -12,31 +12,57 @@
 
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="card mb-4">
+            <div class="card shadow-sm mb-4 border-0">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-file-invoice"></i> Détails du Relevé</h5>
+                    <span class="badge bg-light text-dark">Réf: {{ $releve->reference ?? 'N/A' }}</span>
+                </div>
                 <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-3"><strong>Client:</strong> {{ $releve->client->raison_sociale }}</div>
-                        <div class="col-md-3"><strong>Période:</strong> {{ $releve->date_debut->format('d/m/Y') }} - {{ $releve->date_fin->format('d/m/Y') }}</div>
-                        <div class="col-md-3"><strong>Statut:</strong> {{ $releve->statut }}</div>
+                    <div class="row mb-3">
                         <div class="col-md-3">
-                            @if($releve->releve_pdf)
-                                <a href="{{ route('releves.pdf', basename($releve->releve_pdf)) }}" target="_blank" class="btn btn-sm btn-outline-primary">
-                                    <i class="fas fa-file-pdf"></i> Voir PDF
-                                </a>
+                            <strong><i class="fas fa-user"></i> Client :</strong><br>
+                            {{ $releve->client->raison_sociale }}
+                        </div>
+                        <div class="col-md-3">
+                            <strong><i class="fas fa-calendar-alt"></i> Période :</strong><br>
+                            {{ $releve->date_debut->format('d/m/Y') }} - {{ $releve->date_fin->format('d/m/Y') }}
+                        </div>
+                        <div class="col-md-3">
+                            <strong><i class="fas fa-info-circle"></i> Statut :</strong><br>
+                            @if($releve->statut === 'Payé')
+                            <span class="badge bg-success">Payé</span>
                             @else
-                                <span class="text-muted">Aucun PDF</span>
+                            <span class="badge bg-danger">Impayé</span>
+                            @endif
+                        </div>
+                        <div class="col-md-3 text-end">
+                            @if($releve->releve_pdf)
+                            <a href="{{ route('releves.pdf', basename($releve->releve_pdf)) }}" target="_blank"
+                                class="btn btn-sm btn-outline-light">
+                                <i class="fas fa-file-pdf"></i> Voir PDF
+                            </a>
+                            @else
+                            <span class="text-muted">Aucun PDF</span>
                             @endif
                         </div>
                     </div>
+
                     @if($releve->date_derniere_facture)
-                    <div class="row mt-2">
-                        <div class="col-md-12">
-                            <strong>Date de dernière facture:</strong> {{ $releve->date_derniere_facture->format('d/m/Y') }}
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong><i class="fas fa-calendar-check"></i> Dernière Facture :</strong><br>
+                            {{ $releve->date_derniere_facture->format('d/m/Y') }}
+                        </div>
+                        <div class="col-md-6">
+                            <strong><i class="fas fa-money-bill"></i> Montant Total HT :</strong><br>
+                            {{ number_format($releve->montant_total_ht, 2, ',', ' ') }} DA
                         </div>
                     </div>
                     @endif
                 </div>
             </div>
+
+
 
             <!-- Section Factures du relevé -->
             @if($releve->factures->count() > 0)
@@ -65,17 +91,19 @@
                                     <td class="text-end">{{ number_format($facture->montant_ht, 2, ',', ' ') }} DA</td>
                                     <td class="text-end">{{ number_format($facture->net_a_payer, 2, ',', ' ') }} DA</td>
                                     <td>
-                                        <span class="badge bg-{{ $facture->statut === 'Payée' ? 'success' : ($facture->statut === 'Impayée' ? 'danger' : 'warning') }}">
+                                        <span
+                                            class="badge bg-{{ $facture->statut === 'Payée' ? 'success' : ($facture->statut === 'Impayée' ? 'danger' : 'warning') }}">
                                             {{ $facture->statut }}
                                         </span>
                                     </td>
                                     <td>
                                         @if($facture->pdf_path)
-                                            <a href="{{ route('factures.pdf', basename($facture->pdf_path)) }}" target="_blank" class="btn btn-sm btn-outline-primary">
-                                                <i class="fas fa-file-pdf"></i> Voir PDF
-                                            </a>
+                                        <a href="{{ route('factures.pdf', basename($facture->pdf_path)) }}"
+                                            target="_blank" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-file-pdf"></i> Voir PDF
+                                        </a>
                                         @else
-                                            <span class="text-muted">Aucun PDF</span>
+                                        <span class="text-muted">Aucun PDF</span>
                                         @endif
                                     </td>
                                 </tr>
@@ -97,11 +125,13 @@
                             <i class="fas fa-calculator"></i> Calculer les intérêts du relevé
                         </button>
                         @if($releve->statut !== 'Payé')
-                        <button class="btn btn-success" wire:click="marquerRelevePaye" onclick="return confirm('Marquer ce relevé comme payé ?')">
+                        <button class="btn btn-success" wire:click="marquerRelevePaye"
+                            onclick="return confirm('Marquer ce relevé comme payé ?')">
                             <i class="fas fa-check"></i> Marquer comme payé
                         </button>
                         @else
-                        <button class="btn btn-warning" wire:click="marquerReleveImpaye" onclick="return confirm('Marquer ce relevé comme impayé ?')">
+                        <button class="btn btn-warning" wire:click="marquerReleveImpaye"
+                            onclick="return confirm('Marquer ce relevé comme impayé ?')">
                             <i class="fas fa-times"></i> Marquer comme impayé
                         </button>
                         @endif
@@ -114,5 +144,3 @@
         </div>
     </div>
 </x-app-layout>
-
-
