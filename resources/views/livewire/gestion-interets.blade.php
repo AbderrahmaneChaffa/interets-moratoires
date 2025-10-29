@@ -1,345 +1,406 @@
 <div>
     @if ($facture)
-    <div class="card">
-        <div class="card-header">
-            <h5 class="mb-0">
-                <i class="fas fa-calculator"></i> Gestion des intérêts moratoires
-                <span class="badge bg-primary ms-2">{{ $facture->reference }}</span>
-            </h5>
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-calculator"></i> Gestion des intérêts moratoires
+                    <span class="badge bg-primary ms-2">{{ $facture->reference }}</span>
+                </h5>
+            </div>
+            <div class="card-body">
+                <!-- Informations de la facture -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h6>Informations de la facture</h6>
+                        <table class="table table-sm">
+                            <tr>
+                                <td><strong>Client:</strong></td>
+                                <td>{{ $facture->client->raison_sociale }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Montant HT:</strong></td>
+                                <td>{{ $facture->montant_ht_formatted }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Date dépôt:</strong></td>
+                                <td>{{ $facture->date_depot ? $facture->date_depot->format('d/m/Y') : '-' }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Délai légal:</strong></td>
+                                <td>{{ $facture->delai_legal_jours ?? 30 }} jours</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Calcul des intérêts</h6>
+                        <table class="table table-sm">
+                            <tr>
+                                <td><strong>Jours de retard:</strong></td>
+                                <td>{{ $facture->jours_retard }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Mois de retard:</strong></td>
+                                <td>{{ $facture->mois_retard }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Taux client:</strong></td>
+                                <td>{{ $facture->client->taux ?? 0 }}%</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Formule:</strong></td>
+                                <td>{{ $facture->client->formule ?? 'Standard' }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Bouton calculer tous les intérêts -->
+                @if ($facture->peutGenererInterets())
+                    <div class="mb-3">
+                        <button wire:click="calculerInteret({{ $facture->id }})" class="btn btn-primary">
+                            <i class="fas fa-calculator"></i> Calculer tous les intérêts
+                        </button>
+                    </div>
+                @else
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> Cette facture ne peut pas générer d'intérêts moratoires.
+                    </div>
+                @endif
+
+                <!-- Périodes d'intérêts -->
+                @if (count($periodesInterets) > 0)
+                    @if ($facture->interets->count() > 0)
+                        <div class="mb-3 d-flex gap-2">
+                            <button onclick="exportInteretsToExcel()" class="btn btn-success btn-sm">
+                                <i class="fas fa-file-excel"></i> Export Excel
+                            </button>
+                            <!-- <button onclick="exportInteretsToPDF()" class="btn btn-danger btn-sm">
+                                <i class="fas fa-file-pdf"></i> Export PDF
+                            </button> -->
+                            <button onclick="printInteretsTable()" class="btn btn-info btn-sm">
+                                <i class="fas fa-print"></i> Imprimer
+                            </button>
+                        </div>
+                    @endif
+
+                    <div class="table-responsive">
+                        <table id="interetsTable" class="table table-striped">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Mois</th>
+                                    <th>Période</th>
+                                    <th>Date début</th>
+                                    <th>Date fin</th>
+                                    <th>Jours retard</th>
+                                    <th>Intérêt HT</th>
+                                    <th>Intérêt TTC</th>
+                                    <th>Référence</th>
+                                    <th>PDF</th>
+                                    <th>Statut</th>
+                                    <th>Validation</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach ($periodesInterets as $periode)
+                                    @php
+                                        $interet = $periode['interet_existant'];
+                                        $dateDebut = is_string($periode['date_debut_periode']) ?
+                                            \Carbon\Carbon::parse($periode['date_debut_periode']) : $periode['date_debut_periode'];
+                                        $dateFin = is_string($periode['date_fin_periode']) ?
+                                            \Carbon\Carbon::parse($periode['date_fin_periode']) : $periode['date_fin_periode'];
+                                    @endphp
+                                    <tr>
+                                        <td>{{ $periode['mois'] }}</td>
+                                        <td>{{ $dateDebut->format('m/Y') }}</td>
+                                        <td>{{ $dateDebut->format('d/m/Y') }}</td>
+                                        <td>{{ $dateFin->format('d/m/Y') }}</td>
+                                        <!-- Fixed array access for jours_retard instead of object property -->
+                                        <td>{{ $periode['interet_existant'] ? ($periode['interet_existant']['jours_retard'] ?? $periode['interet_existant']->jours_retard ?? '-') : '-' }}
+                                        </td>
+                                        <td class="text-end">
+                                            @if ($periode['interet_existant'])
+                                                <!-- Fixed array access for interet_ht_formatted -->
+                                                {{ $periode['interet_existant']['interet_ht_formatted'] ?? $periode['interet_existant']->interet_ht_formatted ?? '-' }}
+                                            @else
+                                                <span class="text-muted">-</span>
+                                            @endif
+                                        </td>
+                                        <td class="text-end">
+                                            @if ($periode['interet_existant'])
+                                                <!-- Fixed array access for interet_ttc_formatted -->
+                                                {{ $periode['interet_existant']['interet_ttc_formatted'] ?? $periode['interet_existant']->interet_ttc_formatted ?? '-' }}
+                                            @else
+                                                <span class="text-muted">-</span>
+                                            @endif
+                                        </td>
+
+                                        {{-- Référence --}}
+                                        <td>
+                                            @if ($interet)
+                                                @php
+                                                    $interetId = is_array($interet) ? $interet['id'] : $interet->id;
+                                                @endphp
+                                                <div class="input-group input-group-sm">
+                                                    <!-- Fixed array access for interet id in wire:model -->
+                                                    <input type="text" class="form-control" wire:model="references.{{ $interetId }}"
+                                                        wire:blur="updateReference({{ $interetId }})" placeholder="Référence...">
+                                                    <button class="btn btn-outline-secondary" type="button"
+                                                        wire:click="updateReference({{ $interetId }})" title="Sauvegarder">
+                                                        <i class="fas fa-save"></i>
+                                                    </button>
+                                                </div>
+                                            @else
+                                                -
+                                            @endif
+                                        </td>
+
+                                        {{-- PDF --}}
+                                        <td>
+                                            @if ($interet)
+                                                @php
+                                                    $interetId = is_array($interet) ? $interet['id'] : $interet->id;
+                                                    $pdfPath = is_array($interet) ? ($interet['pdf_path'] ?? null) : $interet->pdf_path;
+                                                @endphp
+                                                <div class="d-flex flex-column gap-1">
+                                                    @if ($pdfPath)
+                                                        <a href="{{ Storage::url($pdfPath) }}" target="_blank"
+                                                            class="btn btn-sm btn-outline-primary">
+                                                            <i class="fas fa-file-pdf"></i> Voir PDF
+                                                        </a>
+                                                    @endif
+
+                                                    <div class="input-group input-group-sm">
+                                                        <!-- Fixed array access for interet id in wire:model and wire:target -->
+                                                        <input type="file" wire:model="pdfUploads.{{ $interetId }}" class="form-control"
+                                                            accept=".pdf">
+                                                        <button class="btn btn-outline-success" type="button"
+                                                            wire:click="uploadPdf({{ $interetId }})" wire:loading.attr="disabled"
+                                                            wire:target="pdfUploads.{{ $interetId }}" title="Uploader PDF">
+                                                            <span wire:loading.remove wire:target="pdfUploads.{{ $interetId }}">
+                                                                <i class="fas fa-upload"></i>
+                                                            </span>
+                                                            <span wire:loading wire:target="pdfUploads.{{ $interetId }}">
+                                                                <i class="fas fa-spinner fa-spin"></i>
+                                                            </span>
+                                                        </button>
+                                                    </div>
+
+                                                    <!-- Fixed array access for interet id in error directive -->
+                                                    @error("pdfUploads.{$interetId}")
+                                                        <small class="text-danger">{{ $message }}</small>
+                                                    @enderror
+                                                </div>
+                                            @else
+                                                -
+                                            @endif
+                                        </td>
+                                        {{-- Statut --}}
+                                        <td>
+                                            @if ($interet)
+                                                                    @php
+                                                                        $statut = is_array($interet) ? ($interet['statut'] ?? 'En attente') : ($interet->statut
+                                                                            ?? 'En attente');
+                                                                    @endphp
+                                                                    <span class="badge 
+                                                @if($statut === 'Validé') bg-success 
+                                                @elseif($statut === 'Calculé') bg-info 
+                                                @else bg-secondary @endif">
+                                                                        {{ $statut }}
+                                                                    </span>
+                                            @else
+                                                -
+                                            @endif
+                                        </td>
+
+                                        {{-- Validation --}}
+                                        <td>
+                                            @if ($interet)
+                                                @php
+                                                    $interetValide = is_array($interet) ? ($interet['valide'] ?? false) : $interet->valide;
+                                                @endphp
+                                                @if($interetValide)
+                                                    <span class="badge bg-success">
+                                                        <i class="fas fa-check-circle"></i> Validé
+                                                    </span>
+                                                @else
+                                                    <span class="badge bg-warning">
+                                                        <i class="fas fa-clock"></i> En attente
+                                                    </span>
+                                                @endif
+                                            @else
+                                                -
+                                            @endif
+                                        </td>
+                                        <td>
+                                            @if ($periode['peut_calculer'])
+                                                <button
+                                                    wire:click="calculerInteretPeriode('{{ $dateDebut->format('Y-m-d') }}', '{{ $dateFin->format('Y-m-d') }}')"
+                                                    class="btn btn-sm btn-success" title="Calculer">
+                                                    <i class="fas fa-calculator"></i>
+                                                </button>
+                                            @else
+                                                @php
+                                                    $interetExistantId = is_array($periode['interet_existant'])
+                                                        ? $periode['interet_existant']['id']
+                                                        : $periode['interet_existant']->id;
+
+                                                    $interetId = is_array($interet) ? $interet['id'] : $interet->id;
+                                                    $interetValide = is_array($interet) ? ($interet['valide'] ?? false) : $interet->valide;
+                                                    $interetStatut = is_array($interet) ? ($interet['statut'] ?? null) : ($interet->statut
+                                                        ?? null);
+                                                @endphp
+
+                                                <div class="btn-group" role="group">
+
+                                                    {{-- Bouton Valider (uniquement si pas encore validé) --}}
+                                                    <button wire:click="openValidateModal({{ $interetId }})"
+                                                        class="btn btn-sm btn-primary" title="Valider le calcul" @if($interetValide)
+                                                        disabled @endif>
+                                                        <i class="fas fa-check-circle"></i>
+                                                        @if($interetValide) Validé @else Valider @endif
+                                                    </button>
+
+                                                    {{-- Bouton Payer (uniquement si validé) --}}
+                                                    @if($interetValide)
+                                                        <button wire:click="openPayModal({{ $interetId }})"
+                                                            class="btn btn-sm {{ $interetStatut === 'Payée' ? 'btn-success' : 'btn-warning' }}"
+                                                            title="{{ $interetStatut === 'Payée' ? 'Déjà payé' : 'Marquer comme payé' }}"
+                                                            @if($interetStatut === 'Payée') disabled @endif>
+                                                            <i class="fas fa-money-check-alt"></i>
+                                                            {{ $interetStatut === 'Payée' ? 'Payé' : 'Payer' }}
+                                                        </button>
+                                                    @endif
+
+                                                    {{-- Bouton Supprimer (désactivé si payé) --}}
+                                                    <button wire:click="supprimerInteret({{ $interetExistantId }})"
+                                                        class="btn btn-sm btn-danger" title="Supprimer" @if($interetStatut === 'Payée')
+                                                        disabled @endif
+                                                        onclick="return confirm('Êtes-vous sûr de vouloir supprimer cet intérêt ?')">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+
+                                                </div>
+
+
+                                            @endif
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Total des intérêts -->
+                    @if ($facture->interets->count() > 0)
+                        <div class="row mt-3">
+                            <div class="col-md-6 offset-md-6">
+                                <table class="table table-sm table-bordered">
+                                    <tr class="table-warning">
+                                        <td><strong>Total intérêts HT:</strong></td>
+                                        <td class="text-end">
+                                            <strong>{{ \App\Services\InteretService::formaterMontant($facture->interets->sum('interet_ht')) }}
+                                            </strong>
+                                        </td>
+                                    </tr>
+                                    <tr class="table-danger">
+                                        <td><strong>Total intérêts TTC:</strong></td>
+                                        <td class="text-end">
+                                            <strong>{{ \App\Services\InteretService::formaterMontant($facture->interets->sum('interet_ttc')) }}
+                                            </strong>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    @endif
+                @else
+                    <div class="text-center py-4">
+                        <i class="fas fa-calculator fa-2x text-muted mb-2"></i>
+                        <p class="text-muted">Aucune période d'intérêts à calculer pour cette facture.</p>
+                    </div>
+                @endif
+            </div>
         </div>
-        <div class="card-body">
-            <!-- Informations de la facture -->
-            <div class="row mb-4">
-                <div class="col-md-6">
-                    <h6>Informations de la facture</h6>
-                    <table class="table table-sm">
-                        <tr>
-                            <td><strong>Client:</strong></td>
-                            <td>{{ $facture->client->raison_sociale }}</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Montant HT:</strong></td>
-                            <td>{{ $facture->montant_ht_formatted }}</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Date dépôt:</strong></td>
-                            <td>{{ $facture->date_depot ? $facture->date_depot->format('d/m/Y') : '-' }}</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Délai légal:</strong></td>
-                            <td>{{ $facture->delai_legal_jours ?? 30 }} jours</td>
-                        </tr>
-                    </table>
-                </div>
-                <div class="col-md-6">
-                    <h6>Calcul des intérêts</h6>
-                    <table class="table table-sm">
-                        <tr>
-                            <td><strong>Jours de retard:</strong></td>
-                            <td>{{ $facture->jours_retard }}</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Mois de retard:</strong></td>
-                            <td>{{ $facture->mois_retard }}</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Taux client:</strong></td>
-                            <td>{{ $facture->client->taux ?? 0 }}%</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Formule:</strong></td>
-                            <td>{{ $facture->client->formule ?? 'Standard' }}</td>
-                        </tr>
-                    </table>
-                </div>
-            </div>
-
-            <!-- Bouton calculer tous les intérêts -->
-            @if ($facture->peutGenererInterets())
-            <div class="mb-3">
-                <button wire:click="calculerInteret({{ $facture->id }})" class="btn btn-primary">
-                    <i class="fas fa-calculator"></i> Calculer tous les intérêts
-                </button>
-            </div>
-            @else
-            <div class="alert alert-info">
-                <i class="fas fa-info-circle"></i> Cette facture ne peut pas générer d'intérêts moratoires.
-            </div>
-            @endif
-
-            <!-- Périodes d'intérêts -->
-            @if (count($periodesInterets) > 0)
-            @if ($facture->interets->count() > 0)
-            <div class="mb-3 d-flex gap-2">
-                <button onclick="exportInteretsToExcel()" class="btn btn-success btn-sm">
-                    <i class="fas fa-file-excel"></i> Export Excel
-                </button>
-                <!-- <button onclick="exportInteretsToPDF()" class="btn btn-danger btn-sm">
-                    <i class="fas fa-file-pdf"></i> Export PDF
-                </button> -->
-                <button onclick="printInteretsTable()" class="btn btn-info btn-sm">
-                    <i class="fas fa-print"></i> Imprimer
-                </button>
-            </div>
-            @endif
-
-            <div class="table-responsive">
-                <table id="interetsTable" class="table table-striped">
-                    <thead class="table-dark">
-                        <tr>
-                            <th>Mois</th>
-                            <th>Période</th>
-                            <th>Date début</th>
-                            <th>Date fin</th>
-                            <th>Jours retard</th>
-                            <th>Intérêt HT</th>
-                            <th>Intérêt TTC</th>
-                            <th>Référence</th>
-                            <th>PDF</th>
-                            <th>Statut</th>
-                            <th>Validation</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach ($periodesInterets as $periode)
-                        @php
-                        $interet = $periode['interet_existant'];
-                        $dateDebut = is_string($periode['date_debut_periode']) ?
-                        \Carbon\Carbon::parse($periode['date_debut_periode']) : $periode['date_debut_periode'];
-                        $dateFin = is_string($periode['date_fin_periode']) ?
-                        \Carbon\Carbon::parse($periode['date_fin_periode']) : $periode['date_fin_periode'];
-                        @endphp
-                        <tr>
-                            <td>{{ $periode['mois'] }}</td>
-                            <td>{{ $dateDebut->format('m/Y') }}</td>
-                            <td>{{ $dateDebut->format('d/m/Y') }}</td>
-                            <td>{{ $dateFin->format('d/m/Y') }}</td>
-                            <!-- Fixed array access for jours_retard instead of object property -->
-                            <td>{{ $periode['interet_existant'] ? ($periode['interet_existant']['jours_retard'] ?? $periode['interet_existant']->jours_retard ?? '-') : '-' }}
-                            </td>
-                            <td class="text-end">
-                                @if ($periode['interet_existant'])
-                                <!-- Fixed array access for interet_ht_formatted -->
-                                {{ $periode['interet_existant']['interet_ht_formatted'] ?? $periode['interet_existant']->interet_ht_formatted ?? '-' }}
-                                @else
-                                <span class="text-muted">-</span>
-                                @endif
-                            </td>
-                            <td class="text-end">
-                                @if ($periode['interet_existant'])
-                                <!-- Fixed array access for interet_ttc_formatted -->
-                                {{ $periode['interet_existant']['interet_ttc_formatted'] ?? $periode['interet_existant']->interet_ttc_formatted ?? '-' }}
-                                @else
-                                <span class="text-muted">-</span>
-                                @endif
-                            </td>
-
-                            {{-- Référence --}}
-                            <td>
-                                @if ($interet)
-                                @php
-                                $interetId = is_array($interet) ? $interet['id'] : $interet->id;
-                                @endphp
-                                <div class="input-group input-group-sm">
-                                    <!-- Fixed array access for interet id in wire:model -->
-                                    <input type="text" class="form-control" wire:model="references.{{ $interetId }}"
-                                        wire:blur="updateReference({{ $interetId }})" placeholder="Référence...">
-                                    <button class="btn btn-outline-secondary" type="button"
-                                        wire:click="updateReference({{ $interetId }})" title="Sauvegarder">
-                                        <i class="fas fa-save"></i>
-                                    </button>
-                                </div>
-                                @else
-                                -
-                                @endif
-                            </td>
-
-                            {{-- PDF --}}
-                            <td>
-                                @if ($interet)
-                                @php
-                                $interetId = is_array($interet) ? $interet['id'] : $interet->id;
-                                $pdfPath = is_array($interet) ? ($interet['pdf_path'] ?? null) : $interet->pdf_path;
-                                @endphp
-                                <div class="d-flex flex-column gap-1">
-                                    @if ($pdfPath)
-                                    <a href="{{ Storage::url($pdfPath) }}" target="_blank"
-                                        class="btn btn-sm btn-outline-primary">
-                                        <i class="fas fa-file-pdf"></i> Voir PDF
-                                    </a>
-                                    @endif
-
-                                    <div class="input-group input-group-sm">
-                                        <!-- Fixed array access for interet id in wire:model and wire:target -->
-                                        <input type="file" wire:model="pdfUploads.{{ $interetId }}" class="form-control"
-                                            accept=".pdf">
-                                        <button class="btn btn-outline-success" type="button"
-                                            wire:click="uploadPdf({{ $interetId }})" wire:loading.attr="disabled"
-                                            wire:target="pdfUploads.{{ $interetId }}" title="Uploader PDF">
-                                            <span wire:loading.remove wire:target="pdfUploads.{{ $interetId }}">
-                                                <i class="fas fa-upload"></i>
-                                            </span>
-                                            <span wire:loading wire:target="pdfUploads.{{ $interetId }}">
-                                                <i class="fas fa-spinner fa-spin"></i>
-                                            </span>
-                                        </button>
-                                    </div>
-
-                                    <!-- Fixed array access for interet id in error directive -->
-                                    @error("pdfUploads.{$interetId}")
-                                    <small class="text-danger">{{ $message }}</small>
-                                    @enderror
-                                </div>
-                                @else
-                                -
-                                @endif
-                            </td>
-                            {{-- Statut --}}
-                            <td>
-                                @if ($interet)
-                                @php
-                                $statut = is_array($interet) ? ($interet['statut'] ?? 'En attente') : ($interet->statut
-                                ?? 'En attente');
-                                @endphp
-                                <span class="badge 
-            @if($statut === 'Validé') bg-success 
-            @elseif($statut === 'Calculé') bg-info 
-            @else bg-secondary @endif">
-                                    {{ $statut }}
-                                </span>
-                                @else
-                                -
-                                @endif
-                            </td>
-
-                            {{-- Validation --}}
-                            <td>
-                                @if ($interet)
-                                @php
-                                $interetValide = is_array($interet) ? ($interet['valide'] ?? false) : $interet->valide;
-                                @endphp
-                                @if($interetValide)
-                                <span class="badge bg-success">
-                                    <i class="fas fa-check-circle"></i> Validé
-                                </span>
-                                @else
-                                <span class="badge bg-warning">
-                                    <i class="fas fa-clock"></i> En attente
-                                </span>
-                                @endif
-                                @else
-                                -
-                                @endif
-                            </td>
-                            <td>
-                                @if ($periode['peut_calculer'])
-                                <button
-                                    wire:click="calculerInteretPeriode('{{ $dateDebut->format('Y-m-d') }}', '{{ $dateFin->format('Y-m-d') }}')"
-                                    class="btn btn-sm btn-success" title="Calculer">
-                                    <i class="fas fa-calculator"></i>
-                                </button>
-                                @else
-                                @php
-                                $interetExistantId = is_array($periode['interet_existant'])
-                                ? $periode['interet_existant']['id']
-                                : $periode['interet_existant']->id;
-
-                                $interetId = is_array($interet) ? $interet['id'] : $interet->id;
-                                $interetValide = is_array($interet) ? ($interet['valide'] ?? false) : $interet->valide;
-                                $interetStatut = is_array($interet) ? ($interet['statut'] ?? null) : ($interet->statut
-                                ?? null);
-                                @endphp
-
-                                <div class="btn-group" role="group">
-
-                                    {{-- Bouton Valider (uniquement si pas encore validé) --}}
-                                    <button wire:click="openValidateModal({{ $interetId }})"
-                                        class="btn btn-sm btn-primary" title="Valider le calcul" @if($interetValide)
-                                        disabled @endif>
-                                        <i class="fas fa-check-circle"></i>
-                                        @if($interetValide) Validé @else Valider @endif
-                                    </button>
-
-                                    {{-- Bouton Payer (uniquement si validé) --}}
-                                    @if($interetValide)
-                                    <button wire:click="openPayModal({{ $interetId }})"
-                                        class="btn btn-sm {{ $interetStatut === 'Payée' ? 'btn-success' : 'btn-warning' }}"
-                                        title="{{ $interetStatut === 'Payée' ? 'Déjà payé' : 'Marquer comme payé' }}"
-                                        @if($interetStatut==='Payée' ) disabled @endif>
-                                        <i class="fas fa-money-check-alt"></i>
-                                        {{ $interetStatut === 'Payée' ? 'Payé' : 'Payer' }}
-                                    </button>
-                                    @endif
-
-                                    {{-- Bouton Supprimer (désactivé si payé) --}}
-                                    <button wire:click="supprimerInteret({{ $interetExistantId }})"
-                                        class="btn btn-sm btn-danger" title="Supprimer" @if($interetStatut==='Payée' )
-                                        disabled @endif
-                                        onclick="return confirm('Êtes-vous sûr de vouloir supprimer cet intérêt ?')">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-
-                                </div>
-
-
-                                @endif
-                            </td>
-                        </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- Total des intérêts -->
-            @if ($facture->interets->count() > 0)
-            <div class="row mt-3">
-                <div class="col-md-6 offset-md-6">
-                    <table class="table table-sm table-bordered">
-                        <tr class="table-warning">
-                            <td><strong>Total intérêts HT:</strong></td>
-                            <td class="text-end">
-                                <strong>{{ \App\Services\InteretService::formaterMontant($facture->interets->sum('interet_ht')) }}
-                                </strong>
-                            </td>
-                        </tr>
-                        <tr class="table-danger">
-                            <td><strong>Total intérêts TTC:</strong></td>
-                            <td class="text-end">
-                                <strong>{{ \App\Services\InteretService::formaterMontant($facture->interets->sum('interet_ttc')) }}
-                                </strong>
-                            </td>
-                        </tr>
-                    </table>
-                </div>
-            </div>
-            @endif
-            @else
-            <div class="text-center py-4">
-                <i class="fas fa-calculator fa-2x text-muted mb-2"></i>
-                <p class="text-muted">Aucune période d'intérêts à calculer pour cette facture.</p>
-            </div>
-            @endif
-        </div>
-    </div>
     @else
-    <div class="alert alert-warning">
-        <i class="fas fa-exclamation-triangle"></i> Aucune facture sélectionnée.
-    </div>
+        <div class="alert alert-warning">
+            <i class="fas fa-exclamation-triangle"></i> Aucune facture sélectionnée.
+        </div>
+    @endif
+
+    @if($showPayModal)
+        <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background: rgba(0,0,0,0.5);">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Confirmation</h5>
+                        <button type="button" class="btn-close" wire:click="$set('showPayModal', false)"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Voulez-vous vraiment marquer cet intérêt moratoire comme
+                            <strong>payé</strong> ?
+                        </p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" wire:click="$set('showPayModal', false)">
+                            Annuler
+                        </button>
+                        <button type="button" class="btn btn-success" wire:click="confirmRendrePaye"
+                            wire:loading.attr="disabled">
+                            <span wire:loading.remove wire:target="confirmRendrePaye">
+                                <i class="fas fa-check"></i> Confirmer
+                            </span>
+                            <span wire:loading wire:target="confirmRendrePaye">
+                                <i class="fas fa-spinner fa-spin"></i> Traitement...
+                            </span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+    @if($showValidateModal)
+        <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5);" role="dialog">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Validation du calcul</h5>
+                        <button type="button" class="btn-close" wire:click="$set('showValidateModal', false)"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Confirmez-vous que ce calcul d’intérêt moratoire est <strong>correct</strong> ?</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" wire:click="$set('showValidateModal', false)">
+                            Annuler
+                        </button>
+                        <button type="button" class="btn btn-success" wire:click="confirmValiderInteret"
+                            wire:loading.attr="disabled">
+                            <span wire:loading.remove wire:target="confirmValiderInteret">
+                                <i class="fas fa-check-circle"></i> Valider
+                            </span>
+                            <span wire:loading wire:target="confirmValiderInteret">
+                                <i class="fas fa-spinner fa-spin"></i> Validation...
+                            </span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     @endif
 
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             initializeInteretsExport();
         });
 
-        document.addEventListener('livewire:load', function() {
+        document.addEventListener('livewire:load', function () {
             initializeInteretsExport();
         });
 
-        document.addEventListener('livewire:update', function() {
-            setTimeout(function() {
+        document.addEventListener('livewire:update', function () {
+            setTimeout(function () {
                 initializeInteretsExport();
             }, 100);
         });
@@ -565,65 +626,4 @@
             }
         }
     </script>
-    @if($showPayModal)
-    <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background: rgba(0,0,0,0.5);">
-        <div class="modal-dialog modal-dialog-centered" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Confirmation</h5>
-                    <button type="button" class="btn-close" wire:click="$set('showPayModal', false)"></button>
-                </div>
-                <div class="modal-body">
-                    <p>Voulez-vous vraiment marquer cet intérêt moratoire comme
-                        <strong>payé</strong> ?
-                    </p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" wire:click="$set('showPayModal', false)">
-                        Annuler
-                    </button>
-                    <button type="button" class="btn btn-success" wire:click="confirmRendrePaye"
-                        wire:loading.attr="disabled">
-                        <span wire:loading.remove wire:target="confirmRendrePaye">
-                            <i class="fas fa-check"></i> Confirmer
-                        </span>
-                        <span wire:loading wire:target="confirmRendrePaye">
-                            <i class="fas fa-spinner fa-spin"></i> Traitement...
-                        </span>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-    @endif
-    @if($showValidateModal)
-    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5);" role="dialog">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Validation du calcul</h5>
-                    <button type="button" class="btn-close" wire:click="$set('showValidateModal', false)"></button>
-                </div>
-                <div class="modal-body">
-                    <p>Confirmez-vous que ce calcul d’intérêt moratoire est <strong>correct</strong> ?</p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" wire:click="$set('showValidateModal', false)">
-                        Annuler
-                    </button>
-                    <button type="button" class="btn btn-success" wire:click="confirmValiderInteret"
-                        wire:loading.attr="disabled">
-                        <span wire:loading.remove wire:target="confirmValiderInteret">
-                            <i class="fas fa-check-circle"></i> Valider
-                        </span>
-                        <span wire:loading wire:target="confirmValiderInteret">
-                            <i class="fas fa-spinner fa-spin"></i> Validation...
-                        </span>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-    @endif
-
 </div>
