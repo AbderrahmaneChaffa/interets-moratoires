@@ -76,10 +76,17 @@ class Releve extends Model
             ->filter(fn($f) => $f->statut !== 'Payée')
             ->sum('montant_ht');
 
+        // if ($montantReference <= 0) {
+        //     return [];
+        // }
+        // si pas de factures, on prend le montant total du relevé comme base
+        if ($montantReference <= 0) {
+            $montantReference = (float) $this->montant_total_ht ?? 0;
+        }
+        // Si toujours rien, on sort
         if ($montantReference <= 0) {
             return [];
         }
-
         // Déterminer la date de départ = date_derniere_facture + 30 jours
         $dateBase = $this->date_derniere_facture ?? $this->factures->max('date_facture');
         if (!$dateBase) {
