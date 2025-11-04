@@ -77,14 +77,14 @@ class ReleveInterets extends Component
 
     public function marquerRelevePaye()
     {
-        $this->releve->update(['statut' => 'Payée']);
+        $this->releve->update(['statut' => 'Payé']);
         $this->releve->refresh();
         session()->flash('message', 'Relevé marqué comme payé.');
     }
 
     public function marquerReleveImpaye()
     {
-        $this->releve->update(['statut' => 'Impayée']);
+        $this->releve->update(['statut' => 'Impayé']);
         $this->releve->refresh();
         session()->flash('message', 'Relevé marqué comme impayé.');
     }

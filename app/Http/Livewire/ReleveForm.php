@@ -19,7 +19,7 @@ class ReleveForm extends Component
     public $date_creation;
     public $categorie;
     public $montant_total_ht;
-    public $statut = 'En attente';
+    public $statut = 'Impayé';
     public $date_derniere_facture;
     public $releve_pdf;
 
@@ -39,7 +39,7 @@ class ReleveForm extends Component
             'date_creation' => 'nullable|date',
             'categorie' => 'nullable|string|max:255',
             'montant_total_ht' => 'nullable|numeric|min:0',
-            'statut' => 'required|string|in:En attente,Payé,Impayé',
+            'statut' => 'required|string|in:Payé,Impayé',
             'date_derniere_facture' => $hasFactures ? 'required|date' : 'nullable|date',
             'releve_pdf' => 'nullable|file|mimes:pdf|max:2048',
             'factures' => 'array',
@@ -179,7 +179,7 @@ class ReleveForm extends Component
     public function render()
     {
         $clients = Client::orderBy('raison_sociale')->get();
-        $statuts = ['En attente' => 'En attente', 'Payé' => 'Payé', 'Impayé' => 'Impayé'];
+        $statuts = ['Payé' => 'Payé', 'Impayé' => 'Impayé'];
         return view('livewire.releve-form', compact('clients', 'statuts'));
     }
 }

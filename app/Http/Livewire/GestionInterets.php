@@ -287,14 +287,14 @@ class GestionInterets extends Component
             return;
         }
 
-        if ($interet->statut === 'Payée') {
+        if ($interet->statut === 'Payé') {
             session()->flash('info', 'Cet intérêt est déjà marqué comme payé.');
             $this->resetPayModal();
             return;
         }
 
         $interet->update([
-            'statut' => 'Payée',
+            'statut' => 'Payé',
         ]);
 
         session()->flash('message', 'Intérêt marqué comme payé avec succès.');

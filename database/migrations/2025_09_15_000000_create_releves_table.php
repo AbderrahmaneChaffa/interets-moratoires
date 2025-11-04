@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     public function up()
     {
         Schema::create('releves', function (Blueprint $table) {
@@ -14,7 +13,8 @@ return new class extends Migration
             $table->date('date_debut');
             $table->date('date_fin');
             $table->date('date_creation')->nullable();
-            $table->enum('statut', ['Payé', 'Impayé'])->default('Impayé');
+            // $table->enum('statut', ['Payé', 'Impayé'])->default('Impayé');
+            $table->enum('statut', ['Payée', 'Impayée'])->default('Impayée');
             $table->timestamps();
             $table->softDeletes();
         });

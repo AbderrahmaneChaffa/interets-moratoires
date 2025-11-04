@@ -264,9 +264,9 @@
                                                     {{-- Bouton Payer (uniquement si validé) --}}
                                                     @if($interetValide)
                                                         <button wire:click="openPayModal({{ $interetId }})"
-                                                            class="btn btn-sm {{ $interetStatut === 'Payée' ? 'btn-success' : 'btn-warning' }}"
-                                                            title="{{ $interetStatut === 'Payée' ? 'Déjà payé' : 'Marquer comme payé' }}"
-                                                            @if($interetStatut === 'Payée') disabled @endif>
+                                                            class="btn btn-sm {{ $interetStatut === 'Payé' ? 'btn-success' : 'btn-warning' }}"
+                                                            title="{{ $interetStatut === 'Payé' ? 'Déjà payé' : 'Marquer comme payé' }}"
+                                                            @if($interetStatut === 'Payé') disabled @endif>
                                                             <i class="fas fa-money-check-alt"></i>
                                                             {{ $interetStatut === 'Payée' ? 'Payé' : 'Payer' }}
                                                         </button>
@@ -274,7 +274,7 @@
 
                                                     {{-- Bouton Supprimer (désactivé si payé) --}}
                                                     <button wire:click="supprimerInteret({{ $interetExistantId }})"
-                                                        class="btn btn-sm btn-danger" title="Supprimer" @if($interetStatut === 'Payée')
+                                                        class="btn btn-sm btn-danger" title="Supprimer" @if($interetStatut === 'Payé')
                                                         disabled @endif
                                                         onclick="return confirm('Êtes-vous sûr de vouloir supprimer cet intérêt ?')">
                                                         <i class="fas fa-trash"></i>

@@ -62,7 +62,6 @@
                     <label for="selectedStatut" class="form-label fw-semibold">Statut</label>
                     <select wire:model.live="selectedStatut" class="form-select">
                         <option value="">Tous les statuts</option>
-                        <option value="En attente">En attente</option>
                         <option value="Payé">Payé</option>
                         <option value="Impayé">Impayé</option>
                     </select>
@@ -402,7 +401,6 @@
                                     <select wire:model="statut"
                                         class="form-select @error('statut') is-invalid @enderror">
                                         <option value="">Sélectionner...</option>
-                                        <option value="En attente">En attente</option>
                                         <option value="Payé">Payé</option>
                                         <option value="Impayé">Impayé</option>
                                     </select>

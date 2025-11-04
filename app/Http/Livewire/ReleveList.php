@@ -38,7 +38,7 @@ class ReleveList extends Component
         'date_creation' => 'nullable|date',
         'categorie' => 'nullable|string|max:255',
         'montant_total_ht' => 'nullable|numeric|min:0',
-        'statut' => 'required|string|in:En attente,Payé,Impayé',
+        'statut' => 'required|string|in:Payé,Impayé',
         'date_derniere_facture' => 'nullable|date',
     ];
 
