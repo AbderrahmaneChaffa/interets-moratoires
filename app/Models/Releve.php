@@ -6,11 +6,13 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
+use App\Traits\Auditable;
 
 class Releve extends Model
 {
     use HasFactory;
     use SoftDeletes;
+    use Auditable;
 
     protected $fillable = [
         'client_id',
@@ -112,22 +114,24 @@ class Releve extends Model
             return [];
         }
 
-        // Construction des périodes mensuelles
+        // Construction des périodes mensuelles (uniquement mois complets)
         $periodes = [];
         $mois = 1;
         $curseur = $dateDebutGrace->copy();
         while ($curseur < $dateFin) {
             $debut = $curseur->copy();
             $fin = $debut->copy()->addMonth();
-            if ($fin > $dateFin) {
-                $fin = $dateFin->copy();
+            
+            // Ne créer une période que si c'est un mois complet (fin <= dateFin)
+            // Si la période est incomplète, on l'ignore pour éviter les doublons
+            if ($fin <= $dateFin) {
+                $periodes[] = [
+                    'mois' => $mois,
+                    'date_debut_periode' => $debut,
+                    'date_fin_periode' => $fin,
+                ];
+                $mois++;
             }
-            $periodes[] = [
-                'mois' => $mois,
-                'date_debut_periode' => $debut,
-                'date_fin_periode' => $fin,
-            ];
-            $mois++;
             $curseur = $fin->copy();
         }
 

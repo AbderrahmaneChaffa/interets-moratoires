@@ -1,8 +1,22 @@
 <div>
-    <div class="mb-3">
-        <button class="btn btn-primary" wire:click="calculer">
-            <i class="fas fa-calculator"></i> Calculer les intérêts du relevé
-        </button>
+    <div class="mb-3 d-flex justify-content-between align-items-center">
+        <div>
+            <button class="btn btn-primary" wire:click="calculer">
+                <i class="fas fa-calculator"></i> Calculer les intérêts du relevé
+            </button>
+        </div>
+        <div>
+            @if(count($periodes) > 0)
+                @php
+                    $nonValides = collect($periodes)->where('valide', false)->count();
+                @endphp
+                @if($nonValides > 0)
+                    <button class="btn btn-success" wire:click="openValidateAllModal">
+                        <i class="fas fa-check-double"></i> Valider tous les intérêts ({{ $nonValides }})
+                    </button>
+                @endif
+            @endif
+        </div>
     </div>
 
     <div class="table-responsive">
@@ -15,11 +29,11 @@
                     <th>Jours retard</th>
                     <th class="text-end">Intérêt HT</th>
                     <th class="text-end">Intérêt TTC</th>
-                            <th>Référence</th>
-                            <th>PDF</th>
-                            <th>Statut</th>
-                            <th>Validation</th>
-                            <th>Actions</th>
+                    <th>Référence</th>
+                    <th>PDF</th>
+                    <th>Statut</th>
+                    <th>Validation</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -42,7 +56,14 @@
                             @endif
                         </td>
                         <td>
-                            {{ $p['statut'] ?? 'En attente' }}
+                            @php
+                                $statut = $p['statut'] ?? 'Impayé';
+                            @endphp
+                            @if($statut === 'Payé')
+                                <span class="badge bg-success">Payé</span>
+                            @else
+                                <span class="badge bg-danger">Impayé</span>
+                            @endif
                         </td>
                         <td>
                             @if(!empty($p['valide']))
@@ -59,8 +80,15 @@
                                     <i class="fas fa-check"></i>
                                 </button>
                                 @endif
+                                @if($statut !== 'Payé')
+                                <button class="btn btn-outline-primary" wire:click="openPayModal({{ $p['id'] }})" 
+                                    title="Marquer comme payé">
+                                    <i class="fas fa-money-check-alt"></i>
+                                </button>
+                                @endif
                                 <button class="btn btn-outline-danger" wire:click="supprimerInteret({{ $p['id'] }})" 
-                                    onclick="return confirm('Supprimer cet intérêt ?')" title="Supprimer">
+                                    onclick="return confirm('Supprimer cet intérêt ?')" title="Supprimer"
+                                    @if($statut === 'Payé') disabled @endif>
                                     <i class="fas fa-trash"></i>
                                 </button>
                             </div>
@@ -74,6 +102,81 @@
             </tbody>
         </table>
     </div>
-</div>
 
+    <!-- Modal: Marquer intérêt comme payé -->
+    @if($showPayModal)
+    <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirmer le paiement</h5>
+                    <button type="button" class="btn-close" wire:click="closeModals"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Voulez-vous vraiment marquer cet intérêt moratoire comme <strong>payé</strong> ?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" wire:click="closeModals">Annuler</button>
+                    <button type="button" class="btn btn-success" wire:click="marquerInteretPaye">
+                        <i class="fas fa-check"></i> Confirmer
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    <!-- Modal: Valider tous les intérêts -->
+    @if($showValidateAllModal)
+    <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Valider tous les intérêts</h5>
+                    <button type="button" class="btn-close" wire:click="closeModals"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Voulez-vous vraiment valider <strong>tous les intérêts non validés</strong> de ce relevé ?</p>
+                    <p class="text-muted small">Cette action marquera tous les intérêts comme validés.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" wire:click="closeModals">Annuler</button>
+                    <button type="button" class="btn btn-success" wire:click="validerTousInterets">
+                        <i class="fas fa-check-double"></i> Valider tous
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    <!-- Modal: Marquer relevé comme payé avec option pour les intérêts -->
+    @if($showRelevePayModal)
+    <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Marquer le relevé comme payé</h5>
+                    <button type="button" class="btn-close" wire:click="closeModals"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Voulez-vous marquer ce relevé comme <strong>payé</strong> ?</p>
+                    <div class="form-check mt-3">
+                        <input class="form-check-input" type="checkbox" wire:model="markInteretsAsPaid" id="markInteretsAsPaid">
+                        <label class="form-check-label" for="markInteretsAsPaid">
+                            Marquer aussi tous les intérêts associés comme payés
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" wire:click="closeModals">Annuler</button>
+                    <button type="button" class="btn btn-success" wire:click="marquerRelevePaye">
+                        <i class="fas fa-check"></i> Confirmer
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+</div>
 

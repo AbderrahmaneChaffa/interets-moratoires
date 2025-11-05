@@ -125,8 +125,7 @@
                             <i class="fas fa-calculator"></i> Calculer les intérêts du relevé
                         </button>
                         @if($releve->statut !== 'Payé')
-                        <button class="btn btn-success" wire:click="marquerRelevePaye"
-                            onclick="return confirm('Marquer ce relevé comme payé ?')">
+                        <button class="btn btn-success" onclick="Livewire.emit('openRelevePayModal')">
                             <i class="fas fa-check"></i> Marquer comme payé
                         </button>
                         @else
