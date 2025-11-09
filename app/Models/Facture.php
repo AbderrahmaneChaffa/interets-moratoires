@@ -6,11 +6,13 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Traits\Auditable;
 
 class Facture extends Model
 {
     use HasFactory;
     use SoftDeletes;
+    use Auditable;
 
     protected $dates = ['deleted_at'];
     protected $fillable = [
@@ -56,37 +58,39 @@ class Facture extends Model
 
     /**
      * Calcule et met à jour le statut de la facture automatiquement.
+     * Note: Maintenant on utilise seulement 'Payé' et 'Impayé'
      *
      * @return string Le statut calculé
      */
     public function calculerStatut()
     {
-        $delai_legal = $this->delai_legal_jours ?? 30;
-
-        if (!$this->date_depot) {
-            $this->statut = 'En attente';
+        // Si la facture a une date de règlement, elle est payée
+        if ($this->date_reglement) {
+            $this->statut = 'Payé';
             return $this->statut;
         }
+        // $date_limite = $this->date_depot->copy()->addDays($delai_legal);
+        // $aujourd_hui = now();
 
-        $date_limite = $this->date_depot->copy()->addDays($delai_legal);
-        $aujourd_hui = now();
+        // if ($this->date_reglement) {
+        //     // Facture réglée
+        //     if ($this->date_reglement <= $date_limite) {
+        //         $this->statut = 'Payée';
+        //     } else {
+        //         $this->statut = 'Retard de paiement';
+        //     }
+        // } else {
+        //     // Facture non réglée
+        //     if ($aujourd_hui > $date_limite) {
+        //         $this->statut = 'Impayée';
+        //     } else {
+        //         $this->statut = 'En attente';
+        //     }
+        // }
 
-        if ($this->date_reglement) {
-            // Facture réglée
-            if ($this->date_reglement <= $date_limite) {
-                $this->statut = 'Payée';
-            } else {
-                $this->statut = 'Retard de paiement';
-            }
-        } else {
-            // Facture non réglée
-            if ($aujourd_hui > $date_limite) {
-                $this->statut = 'Impayée';
-            } else {
-                $this->statut = 'En attente';
-            }
-        }
 
+        // Sinon, elle est impayée
+        $this->statut = 'Impayé';
         return $this->statut;
     }
 
@@ -110,10 +114,8 @@ class Facture extends Model
     public static function getStatutsDisponibles()
     {
         return [
-            'En attente' => 'En attente',
-            'Payée' => 'Payée',
-            'Retard de paiement' => 'Retard de paiement',
-            'Impayée' => 'Impayée'
+            'Payé' => 'Payé',
+            'Impayé' => 'Impayé'
         ];
     }
 

@@ -67,8 +67,16 @@
             <!-- Section Factures du relevé -->
             @if($releve->factures->count() > 0)
             <div class="card mb-4">
-                <div class="card-header">
+                <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="mb-0"><i class="fas fa-file-invoice"></i> Factures du relevé</h5>
+                    @php
+                        $nonPayees = $releve->factures->where('statut', '!=', 'Payé')->count();
+                    @endphp
+                    @if($nonPayees > 0)
+                        <button class="btn btn-success btn-sm" onclick="Livewire.emit('openFacturesPayAllModal')">
+                            <i class="fas fa-check-double"></i> Marquer toutes comme payées ({{ $nonPayees }})
+                        </button>
+                    @endif
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
@@ -81,6 +89,7 @@
                                     <th class="text-end">Net à payer</th>
                                     <th>Statut</th>
                                     <th>PDF</th>
+                                    <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -91,10 +100,14 @@
                                     <td class="text-end">{{ number_format($facture->montant_ht, 2, ',', ' ') }} DA</td>
                                     <td class="text-end">{{ number_format($facture->net_a_payer, 2, ',', ' ') }} DA</td>
                                     <td>
-                                        <span
-                                            class="badge bg-{{ $facture->statut === 'Payée' ? 'success' : ($facture->statut === 'Impayée' ? 'danger' : 'warning') }}">
-                                            {{ $facture->statut }}
-                                        </span>
+                                        @php
+                                            $statut = $facture->statut ?? 'Impayé';
+                                        @endphp
+                                        @if($statut === 'Payé')
+                                            <span class="badge bg-success">Payé</span>
+                                        @else
+                                            <span class="badge bg-danger">Impayé</span>
+                                        @endif
                                     </td>
                                     <td>
                                         @if($facture->pdf_path)
@@ -105,6 +118,23 @@
                                         @else
                                         <span class="text-muted">Aucun PDF</span>
                                         @endif
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            @if($statut !== 'Payé')
+                                                <button class="btn btn-outline-primary" 
+                                                    onclick="Livewire.emit('openFacturePayModal', {{ $facture->id }})" 
+                                                    title="Marquer comme payée">
+                                                    <i class="fas fa-money-check-alt"></i>
+                                                </button>
+                                            @else
+                                                <button class="btn btn-outline-warning" 
+                                                    onclick="if(confirm('Marquer cette facture comme impayée ?')) { Livewire.emit('marquerFactureImpaye', {{ $facture->id }}); }" 
+                                                    title="Marquer comme impayée">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                            @endif
+                                        </div>
                                     </td>
                                 </tr>
                                 @endforeach

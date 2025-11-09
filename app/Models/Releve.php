@@ -52,7 +52,7 @@ class Releve extends Model
 
     public function calculerStatut(): string
     {
-        $toutesPayees = $this->factures()->where('statut', '!=', 'Payée')->count() === 0;
+        $toutesPayees = $this->factures()->where('statut', '!=', 'Payé')->count() === 0;
         $this->statut = $toutesPayees ? 'Payé' : 'Impayé';
         return $this->statut;
     }
@@ -75,7 +75,7 @@ class Releve extends Model
 
         // Montant de référence = somme des montants HT impayés dans le relevé
         $montantReference = (float) $this->factures
-            ->filter(fn($f) => $f->statut !== 'Payée')
+            ->filter(fn($f) => $f->statut !== 'Payé')
             ->sum('montant_ht');
 
         // if ($montantReference <= 0) {
@@ -100,11 +100,11 @@ class Releve extends Model
 
         // Déterminer la date de fin du calcul
         $estPaye = $this->statut === 'Payé'
-            || $this->factures->every(fn($f) => $f->statut === 'Payée');
+            || $this->factures->every(fn($f) => $f->statut === 'Payé');
 
         if ($estPaye) {
-            $dateFin = $this->factures->max('date_paiement')
-                ? \Carbon\Carbon::parse($this->factures->max('date_paiement'))
+            $dateFin = $this->factures->max('date_reglement')
+                ? \Carbon\Carbon::parse($this->factures->max('date_reglement'))
                 : now();
         } else {
             $dateFin = now();

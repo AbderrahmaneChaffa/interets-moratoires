@@ -5,6 +5,7 @@ namespace App\Http\Livewire;
 use Livewire\Component;
 use App\Models\Releve;
 use App\Models\Interet;
+use App\Models\Facture;
 use Illuminate\Support\Facades\DB;
 
 class ReleveInterets extends Component
@@ -19,10 +20,18 @@ class ReleveInterets extends Component
     public $showValidateAllModal = false;
     public $showRelevePayModal = false;
     public $markInteretsAsPaid = false;
+    
+    // Factures modals
+    public $showFacturePayModal = false;
+    public $payFactureId = null;
+    public $showFacturesPayAllModal = false;
 
     protected $listeners = [
         'calculerInteretsReleve' => 'calculer',
         'openRelevePayModal' => 'openRelevePayModal',
+        'openFacturePayModal' => 'openFacturePayModal',
+        'openFacturesPayAllModal' => 'openFacturesPayAllModal',
+        'marquerFactureImpaye' => 'marquerFactureImpaye',
     ];
 
     public function mount($releveId)
@@ -246,6 +255,151 @@ class ReleveInterets extends Component
         $this->showRelevePayModal = false;
         $this->payInteretId = null;
         $this->markInteretsAsPaid = false;
+        $this->showFacturePayModal = false;
+        $this->showFacturesPayAllModal = false;
+        $this->payFactureId = null;
+    }
+
+    // ========== GESTION DES FACTURES ==========
+
+    public function openFacturePayModal($factureId)
+    {
+        $this->payFactureId = $factureId;
+        $this->showFacturePayModal = true;
+    }
+
+    public function marquerFacturePaye()
+    {
+        DB::beginTransaction();
+        try {
+            $facture = Facture::findOrFail($this->payFactureId);
+            
+            if ($facture->statut === 'Payé') {
+                session()->flash('info', 'Cette facture est déjà marquée comme payée.');
+                $this->showFacturePayModal = false;
+                return;
+            }
+
+            $oldStatut = $facture->statut;
+            
+            // Si on marque comme payé, mettre aussi la date de règlement à aujourd'hui si elle n'existe pas
+            if (!$facture->date_reglement) {
+                $facture->update([
+                    'statut' => 'Payé',
+                    'date_reglement' => now(),
+                ]);
+            } else {
+                $facture->update(['statut' => 'Payé']);
+            }
+            
+            // Log audit
+            $facture->logChange('status_changed', 'statut', $oldStatut, 'Payé', 
+                'Facture marquée comme payée');
+
+            // Mettre à jour le statut du relevé si nécessaire
+            $this->releve->refresh();
+            $this->releve->calculerStatut();
+            $this->releve->save();
+
+            DB::commit();
+            $this->releve->refresh();
+            $this->loadData();
+            $this->showFacturePayModal = false;
+            session()->flash('message', 'Facture marquée comme payée avec succès.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            session()->flash('error', 'Erreur lors de la mise à jour: ' . $e->getMessage());
+        }
+    }
+
+    public function marquerFactureImpaye($factureId)
+    {
+        DB::beginTransaction();
+        try {
+            $facture = Facture::findOrFail($factureId);
+            
+            if ($facture->statut === 'Impayé') {
+                session()->flash('info', 'Cette facture est déjà marquée comme impayée.');
+                return;
+            }
+
+            $oldStatut = $facture->statut;
+            $facture->update([
+                'statut' => 'Impayé',
+                'date_reglement' => null, // Retirer la date de règlement si on marque comme impayé
+            ]);
+            
+            // Log audit
+            $facture->logChange('status_changed', 'statut', $oldStatut, 'Impayé', 
+                'Facture marquée comme impayée');
+
+            // Mettre à jour le statut du relevé si nécessaire
+            $this->releve->refresh();
+            $this->releve->calculerStatut();
+            $this->releve->save();
+
+            DB::commit();
+            $this->releve->refresh();
+            $this->loadData();
+            session()->flash('message', 'Facture marquée comme impayée avec succès.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            session()->flash('error', 'Erreur lors de la mise à jour: ' . $e->getMessage());
+        }
+    }
+
+    public function openFacturesPayAllModal()
+    {
+        $this->showFacturesPayAllModal = true;
+    }
+
+    public function marquerToutesFacturesPayees()
+    {
+        DB::beginTransaction();
+        try {
+            $factures = Facture::where('releve_id', $this->releveId)
+                ->where('statut', '!=', 'Payé')
+                ->get();
+
+            $count = 0;
+            foreach ($factures as $facture) {
+                $oldStatut = $facture->statut;
+                
+                // Mettre la date de règlement si elle n'existe pas
+                if (!$facture->date_reglement) {
+                    $facture->update([
+                        'statut' => 'Payé',
+                        'date_reglement' => now(),
+                    ]);
+                } else {
+                    $facture->update(['statut' => 'Payé']);
+                }
+                
+                $count++;
+                
+                // Log audit
+                $facture->logChange('status_changed', 'statut', $oldStatut, 'Payé', 
+                    'Facture marquée comme payée (toutes les factures)');
+            }
+
+            // Mettre à jour le statut du relevé
+            $this->releve->refresh();
+            $this->releve->calculerStatut();
+            $this->releve->save();
+
+            // Log audit pour le relevé
+            $this->releve->logChange('status_changed', 'statut', $this->releve->getOriginal('statut'), 'Payé',
+                sprintf('Toutes les factures (%d) marquées comme payées', $count));
+
+            DB::commit();
+            $this->releve->refresh();
+            $this->loadData();
+            $this->showFacturesPayAllModal = false;
+            session()->flash('message', sprintf('%d facture(s) marquée(s) comme payée(s) avec succès.', $count));
+        } catch (\Exception $e) {
+            DB::rollBack();
+            session()->flash('error', 'Erreur lors de la mise à jour: ' . $e->getMessage());
+        }
     }
 
     public function render()

@@ -178,5 +178,53 @@
         </div>
     </div>
     @endif
+
+    <!-- Modal: Marquer facture comme payée -->
+    @if($showFacturePayModal)
+    <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirmer le paiement de la facture</h5>
+                    <button type="button" class="btn-close" wire:click="closeModals"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Voulez-vous vraiment marquer cette facture comme <strong>payée</strong> ?</p>
+                    <p class="text-muted small">La date de règlement sera définie à aujourd'hui si elle n'est pas déjà renseignée.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" wire:click="closeModals">Annuler</button>
+                    <button type="button" class="btn btn-success" wire:click="marquerFacturePaye">
+                        <i class="fas fa-check"></i> Confirmer
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    <!-- Modal: Marquer toutes les factures comme payées -->
+    @if($showFacturesPayAllModal)
+    <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Marquer toutes les factures comme payées</h5>
+                    <button type="button" class="btn-close" wire:click="closeModals"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Voulez-vous vraiment marquer <strong>toutes les factures non payées</strong> de ce relevé comme payées ?</p>
+                    <p class="text-muted small">La date de règlement sera définie à aujourd'hui pour toutes les factures qui n'en ont pas encore.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" wire:click="closeModals">Annuler</button>
+                    <button type="button" class="btn btn-success" wire:click="marquerToutesFacturesPayees">
+                        <i class="fas fa-check-double"></i> Confirmer
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
 </div>
 
