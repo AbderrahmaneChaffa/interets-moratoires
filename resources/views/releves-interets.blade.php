@@ -148,7 +148,7 @@
             <div class="card mb-4">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <div>
-                        <strong>Actions</strong>
+                        <strong>Les intérêts du relevé</strong>
                     </div>
                     <div class="btn-group" role="group">
                         <button class="btn btn-primary" onclick="window.livewire.emit('calculerInteretsReleve')">
