@@ -30,34 +30,34 @@
                         <div class="col-md-3">
                             <strong><i class="fas fa-info-circle"></i> Statut :</strong><br>
                             @if($releve->statut === 'Payé')
-                            <span class="badge bg-success">Payé</span>
+                                <span class="badge bg-success">Payé</span>
                             @else
-                            <span class="badge bg-danger">Impayé</span>
+                                <span class="badge bg-danger">Impayé</span>
                             @endif
                         </div>
                         <div class="col-md-3 text-end">
                             @if($releve->releve_pdf)
-                            <a href="{{ route('releves.pdf', basename($releve->releve_pdf)) }}" target="_blank"
-                                class="btn btn-sm btn-outline-light">
-                                <i class="fas fa-file-pdf"></i> Voir PDF
-                            </a>
+                                <a href="{{ route('releves.pdf', basename($releve->releve_pdf)) }}" target="_blank"
+                                    class="btn btn-sm btn-outline-light">
+                                    <i class="fas fa-file-pdf"></i> Voir PDF
+                                </a>
                             @else
-                            <span class="text-muted">Aucun PDF</span>
+                                <span class="text-muted">Aucun PDF</span>
                             @endif
                         </div>
                     </div>
 
                     @if($releve->date_derniere_facture)
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <strong><i class="fas fa-calendar-check"></i> Dernière Facture :</strong><br>
-                            {{ $releve->date_derniere_facture->format('d/m/Y') }}
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <strong><i class="fas fa-calendar-check"></i> Dernière Facture :</strong><br>
+                                {{ $releve->date_derniere_facture->format('d/m/Y') }}
+                            </div>
+                            <div class="col-md-6">
+                                <strong><i class="fas fa-money-bill"></i> Montant Total HT :</strong><br>
+                                {{ number_format($releve->montant_total_ht, 2, ',', ' ') }} DA
+                            </div>
                         </div>
-                        <div class="col-md-6">
-                            <strong><i class="fas fa-money-bill"></i> Montant Total HT :</strong><br>
-                            {{ number_format($releve->montant_total_ht, 2, ',', ' ') }} DA
-                        </div>
-                    </div>
                     @endif
                 </div>
             </div>
@@ -66,83 +66,83 @@
 
             <!-- Section Factures du relevé -->
             @if($releve->factures->count() > 0)
-            <div class="card mb-4">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0"><i class="fas fa-file-invoice"></i> Factures du relevé</h5>
-                    @php
-                        $nonPayees = $releve->factures->where('statut', '!=', 'Payé')->count();
-                    @endphp
-                    @if($nonPayees > 0)
-                        <button class="btn btn-success btn-sm" onclick="Livewire.emit('openFacturesPayAllModal')">
-                            <i class="fas fa-check-double"></i> Marquer toutes comme payées ({{ $nonPayees }})
-                        </button>
-                    @endif
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-striped">
-                            <thead>
-                                <tr>
-                                    <th>Référence</th>
-                                    <th>Date facture</th>
-                                    <th class="text-end">Montant HT</th>
-                                    <th class="text-end">Net à payer</th>
-                                    <th>Statut</th>
-                                    <th>PDF</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($releve->factures as $facture)
-                                <tr>
-                                    <td>{{ $facture->reference }}</td>
-                                    <td>{{ $facture->date_facture->format('d/m/Y') }}</td>
-                                    <td class="text-end">{{ number_format($facture->montant_ht, 2, ',', ' ') }} DA</td>
-                                    <td class="text-end">{{ number_format($facture->net_a_payer, 2, ',', ' ') }} DA</td>
-                                    <td>
-                                        @php
-                                            $statut = $facture->statut ?? 'Impayé';
-                                        @endphp
-                                        @if($statut === 'Payé')
-                                            <span class="badge bg-success">Payé</span>
-                                        @else
-                                            <span class="badge bg-danger">Impayé</span>
-                                        @endif
-                                    </td>
-                                    <td>
-                                        @if($facture->pdf_path)
-                                        <a href="{{ route('factures.pdf', basename($facture->pdf_path)) }}"
-                                            target="_blank" class="btn btn-sm btn-outline-primary">
-                                            <i class="fas fa-file-pdf"></i> Voir PDF
-                                        </a>
-                                        @else
-                                        <span class="text-muted">Aucun PDF</span>
-                                        @endif
-                                    </td>
-                                    <td>
-                                        <div class="btn-group btn-group-sm" role="group">
-                                            @if($statut !== 'Payé')
-                                                <button class="btn btn-outline-primary" 
-                                                    onclick="Livewire.emit('openFacturePayModal', {{ $facture->id }})" 
-                                                    title="Marquer comme payée">
-                                                    <i class="fas fa-money-check-alt"></i>
-                                                </button>
-                                            @else
-                                                <button class="btn btn-outline-warning" 
-                                                    onclick="if(confirm('Marquer cette facture comme impayée ?')) { Livewire.emit('marquerFactureImpaye', {{ $facture->id }}); }" 
-                                                    title="Marquer comme impayée">
-                                                    <i class="fas fa-times"></i>
-                                                </button>
-                                            @endif
-                                        </div>
-                                    </td>
-                                </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
+                <div class="card mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fas fa-file-invoice"></i> Factures du relevé</h5>
+                        @php
+                            $nonPayees = $releve->factures->where('statut', '!=', 'Payé')->count();
+                        @endphp
+                        @if($nonPayees > 0)
+                            <button class="btn btn-success btn-sm" onclick="Livewire.emit('openFacturesPayAllModal')">
+                                <i class="fas fa-check-double"></i> Marquer toutes comme payées ({{ $nonPayees }})
+                            </button>
+                        @endif
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Référence</th>
+                                        <th>Date facture</th>
+                                        <th class="text-end">Montant HT</th>
+                                        <th class="text-end">Net à payer</th>
+                                        <th>Statut</th>
+                                        <th>PDF</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($releve->factures as $facture)
+                                        <tr>
+                                            <td>{{ $facture->reference }}</td>
+                                            <td>{{ $facture->date_facture->format('d/m/Y') }}</td>
+                                            <td class="text-end">{{ number_format($facture->montant_ht, 2, ',', ' ') }} DA</td>
+                                            <td class="text-end">{{ number_format($facture->net_a_payer, 2, ',', ' ') }} DA</td>
+                                            <td>
+                                                @php
+                                                    $statut = $facture->statut ?? 'Impayé';
+                                                @endphp
+                                                @if($statut === 'Payé')
+                                                    <span class="badge bg-success">Payé</span>
+                                                @else
+                                                    <span class="badge bg-danger">Impayé</span>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                @if($facture->pdf_path)
+                                                    <a href="{{ route('factures.pdf', basename($facture->pdf_path)) }}"
+                                                        target="_blank" class="btn btn-sm btn-outline-primary">
+                                                        <i class="fas fa-file-pdf"></i> Voir PDF
+                                                    </a>
+                                                @else
+                                                    <span class="text-muted">Aucun PDF</span>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                <div class="btn-group btn-group-sm" role="group">
+                                                    @if($statut !== 'Payé')
+                                                        <button class="btn btn-outline-primary"
+                                                            onclick="Livewire.emit('openFacturePayModal', {{ $facture->id }})"
+                                                            title="Marquer comme payée">
+                                                            <i class="fas fa-money-check-alt"></i>
+                                                        </button>
+                                                    @else
+                                                        <button class="btn btn-outline-warning"
+                                                            onclick="if(confirm('Marquer cette facture comme impayée ?')) { Livewire.emit('marquerFactureImpaye', {{ $facture->id }}); }"
+                                                            title="Marquer comme impayée">
+                                                            <i class="fas fa-times"></i>
+                                                        </button>
+                                                    @endif
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
-            </div>
             @endif
 
             <div class="card mb-4">
@@ -155,19 +155,28 @@
                             <i class="fas fa-calculator"></i> Calculer les intérêts du relevé
                         </button>
                         @if($releve->statut !== 'Payé')
-                        <button class="btn btn-success" onclick="Livewire.emit('openRelevePayModal')">
-                            <i class="fas fa-check"></i> Marquer comme payé
-                        </button>
+                            <button class="btn btn-success" onclick="Livewire.emit('openRelevePayModal')">
+                                <i class="fas fa-check"></i> Marquer comme payé
+                            </button>
+                            <script>
+                                window.addEventListener('releve:reload', function () {
+                                    // petite temporisation si besoin (optionnelle)
+                                    setTimeout(function () {
+                                        location.reload();
+                                    }, 200); // 200ms => laisse le flash message s'afficher si nécessaire
+                                });
+                            </script>
+
                         @else
-                        <button class="btn btn-warning" wire:click="marquerReleveImpaye"
-                            onclick="return confirm('Marquer ce relevé comme impayé ?')">
-                            <i class="fas fa-times"></i> Marquer comme impayé
-                        </button>
+                            <button class="btn btn-warning" wire:click="marquerReleveImpaye"
+                                onclick="return confirm('Marquer ce relevé comme impayé ?')">
+                                <i class="fas fa-times"></i> Marquer comme impayé
+                            </button>
                         @endif
                     </div>
                 </div>
                 <div class="card-body">
-                    @livewire('releve-interets', ['releveId' => $releve->id], key('releve-'.$releve->id))
+                    @livewire('releve-interets', ['releveId' => $releve->id], key('releve-' . $releve->id))
                 </div>
             </div>
         </div>

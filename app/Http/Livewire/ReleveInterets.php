@@ -20,7 +20,7 @@ class ReleveInterets extends Component
     public $showValidateAllModal = false;
     public $showRelevePayModal = false;
     public $markInteretsAsPaid = false;
-    
+
     // Factures modals
     public $showFacturePayModal = false;
     public $payFactureId = null;
@@ -86,10 +86,15 @@ class ReleveInterets extends Component
             $interet = Interet::findOrFail($interetId);
             $oldValide = $interet->valide;
             $interet->update(['valide' => true]);
-            
+
             // Log audit
-            $interet->logChange('validated', 'valide', $oldValide, true, 
-                'Intérêt validé');
+            $interet->logChange(
+                'validated',
+                'valide',
+                $oldValide,
+                true,
+                'Intérêt validé'
+            );
 
             DB::commit();
             $this->refreshPeriodes();
@@ -105,11 +110,17 @@ class ReleveInterets extends Component
         DB::beginTransaction();
         try {
             $interet = Interet::findOrFail($interetId);
-            
+
             // Log audit before deletion
-            $interet->logChange('deleted', null, null, null, 
-                'Intérêt supprimé', ['interet_data' => $interet->toArray()]);
-            
+            $interet->logChange(
+                'deleted',
+                null,
+                null,
+                null,
+                'Intérêt supprimé',
+                ['interet_data' => $interet->toArray()]
+            );
+
             $interet->delete();
             DB::commit();
             $this->refreshPeriodes();
@@ -132,21 +143,32 @@ class ReleveInterets extends Component
         try {
             $oldStatut = $this->releve->statut;
             $this->releve->update(['statut' => 'Payé']);
-            
+
             // Log audit
-            $this->releve->logChange('status_changed', 'statut', $oldStatut, 'Payé', 
-                'Relevé marqué comme payé');
+            $this->releve->logChange(
+                'status_changed',
+                'statut',
+                $oldStatut,
+                'Payé',
+                'Relevé marqué comme payé'
+            );
 
             // Si l'utilisateur veut aussi marquer les intérêts comme payés
             if ($this->markInteretsAsPaid) {
                 $count = Interet::where('releve_id', $this->releveId)
                     ->where('statut', '!=', 'Payé')
                     ->update(['statut' => 'Payé']);
-                
+
                 // Log audit pour les intérêts
-                Interet::logAudit('bulk_status_changed', null, 'statut', 'Impayé', 'Payé',
+                Interet::logAudit(
+                    'bulk_status_changed',
+                    null,
+                    'statut',
+                    'Impayé',
+                    'Payé',
                     sprintf('%d intérêt(s) marqué(s) comme payé(s) avec le relevé', $count),
-                    ['releve_id' => $this->releveId, 'count' => $count]);
+                    ['releve_id' => $this->releveId, 'count' => $count]
+                );
             }
 
             DB::commit();
@@ -154,11 +176,16 @@ class ReleveInterets extends Component
             $this->refreshPeriodes();
             $this->showRelevePayModal = false;
             session()->flash('message', 'Relevé marqué comme payé' . ($this->markInteretsAsPaid ? ' avec tous les intérêts associés' : '') . '.');
+
+            // <-- Ajout : demander au navigateur d'actualiser la page
+            $this->dispatchBrowserEvent('releve:reload');
+
         } catch (\Exception $e) {
             DB::rollBack();
             session()->flash('error', 'Erreur lors de la mise à jour: ' . $e->getMessage());
         }
     }
+
 
     public function marquerReleveImpaye()
     {
@@ -166,10 +193,15 @@ class ReleveInterets extends Component
         try {
             $oldStatut = $this->releve->statut;
             $this->releve->update(['statut' => 'Impayé']);
-            
+
             // Log audit
-            $this->releve->logChange('status_changed', 'statut', $oldStatut, 'Impayé', 
-                'Relevé marqué comme impayé');
+            $this->releve->logChange(
+                'status_changed',
+                'statut',
+                $oldStatut,
+                'Impayé',
+                'Relevé marqué comme impayé'
+            );
 
             DB::commit();
             $this->releve->refresh();
@@ -191,7 +223,7 @@ class ReleveInterets extends Component
         DB::beginTransaction();
         try {
             $interet = Interet::findOrFail($this->payInteretId);
-            
+
             if ($interet->statut === 'Payé') {
                 session()->flash('info', 'Cet intérêt est déjà marqué comme payé.');
                 $this->showPayModal = false;
@@ -200,10 +232,15 @@ class ReleveInterets extends Component
 
             $oldStatut = $interet->statut;
             $interet->update(['statut' => 'Payé']);
-            
+
             // Log audit
-            $interet->logChange('status_changed', 'statut', $oldStatut, 'Payé', 
-                'Intérêt marqué comme payé');
+            $interet->logChange(
+                'status_changed',
+                'statut',
+                $oldStatut,
+                'Payé',
+                'Intérêt marqué comme payé'
+            );
 
             DB::commit();
             $this->refreshPeriodes();
@@ -232,10 +269,15 @@ class ReleveInterets extends Component
             foreach ($interets as $interet) {
                 $interet->update(['valide' => true]);
                 $count++;
-                
+
                 // Log audit
-                $interet->logChange('validated', 'valide', false, true, 
-                    'Intérêt validé');
+                $interet->logChange(
+                    'validated',
+                    'valide',
+                    false,
+                    true,
+                    'Intérêt validé'
+                );
             }
 
             DB::commit();
@@ -273,7 +315,7 @@ class ReleveInterets extends Component
         DB::beginTransaction();
         try {
             $facture = Facture::findOrFail($this->payFactureId);
-            
+
             if ($facture->statut === 'Payé') {
                 session()->flash('info', 'Cette facture est déjà marquée comme payée.');
                 $this->showFacturePayModal = false;
@@ -281,7 +323,7 @@ class ReleveInterets extends Component
             }
 
             $oldStatut = $facture->statut;
-            
+
             // Si on marque comme payé, mettre aussi la date de règlement à aujourd'hui si elle n'existe pas
             if (!$facture->date_reglement) {
                 $facture->update([
@@ -291,10 +333,15 @@ class ReleveInterets extends Component
             } else {
                 $facture->update(['statut' => 'Payé']);
             }
-            
+
             // Log audit
-            $facture->logChange('status_changed', 'statut', $oldStatut, 'Payé', 
-                'Facture marquée comme payée');
+            $facture->logChange(
+                'status_changed',
+                'statut',
+                $oldStatut,
+                'Payé',
+                'Facture marquée comme payée'
+            );
 
             // Mettre à jour le statut du relevé si nécessaire
             $this->releve->refresh();
@@ -317,7 +364,7 @@ class ReleveInterets extends Component
         DB::beginTransaction();
         try {
             $facture = Facture::findOrFail($factureId);
-            
+
             if ($facture->statut === 'Impayé') {
                 session()->flash('info', 'Cette facture est déjà marquée comme impayée.');
                 return;
@@ -328,10 +375,15 @@ class ReleveInterets extends Component
                 'statut' => 'Impayé',
                 'date_reglement' => null, // Retirer la date de règlement si on marque comme impayé
             ]);
-            
+
             // Log audit
-            $facture->logChange('status_changed', 'statut', $oldStatut, 'Impayé', 
-                'Facture marquée comme impayée');
+            $facture->logChange(
+                'status_changed',
+                'statut',
+                $oldStatut,
+                'Impayé',
+                'Facture marquée comme impayée'
+            );
 
             // Mettre à jour le statut du relevé si nécessaire
             $this->releve->refresh();
@@ -364,7 +416,7 @@ class ReleveInterets extends Component
             $count = 0;
             foreach ($factures as $facture) {
                 $oldStatut = $facture->statut;
-                
+
                 // Mettre la date de règlement si elle n'existe pas
                 if (!$facture->date_reglement) {
                     $facture->update([
@@ -374,12 +426,17 @@ class ReleveInterets extends Component
                 } else {
                     $facture->update(['statut' => 'Payé']);
                 }
-                
+
                 $count++;
-                
+
                 // Log audit
-                $facture->logChange('status_changed', 'statut', $oldStatut, 'Payé', 
-                    'Facture marquée comme payée (toutes les factures)');
+                $facture->logChange(
+                    'status_changed',
+                    'statut',
+                    $oldStatut,
+                    'Payé',
+                    'Facture marquée comme payée (toutes les factures)'
+                );
             }
 
             // Mettre à jour le statut du relevé
@@ -388,8 +445,13 @@ class ReleveInterets extends Component
             $this->releve->save();
 
             // Log audit pour le relevé
-            $this->releve->logChange('status_changed', 'statut', $this->releve->getOriginal('statut'), 'Payé',
-                sprintf('Toutes les factures (%d) marquées comme payées', $count));
+            $this->releve->logChange(
+                'status_changed',
+                'statut',
+                $this->releve->getOriginal('statut'),
+                'Payé',
+                sprintf('Toutes les factures (%d) marquées comme payées', $count)
+            );
 
             DB::commit();
             $this->releve->refresh();
