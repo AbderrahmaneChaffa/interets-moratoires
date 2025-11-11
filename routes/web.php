@@ -6,12 +6,13 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\EmailController;
 use App\Http\Controllers\GestionInteretsController;
 use App\Http\Controllers\ReleveInteretsController;
-use App\Http\Livewire\ClientCrud;
-use App\Http\Livewire\FactureForm;
+use App\Http\Livewire\Client\ClientCrud;
+use App\Http\Livewire\Facture\FactureForm;
+use App\Http\Livewire\Releve\ReleveDetails;
 use App\Http\Livewire\ReleveForm;
-use App\Http\Livewire\FactureList;
+use App\Http\Livewire\Facture\FactureList;
 use App\Http\Livewire\ReleveList;
-use App\Http\Livewire\FactureTable;
+use App\Http\Livewire\Facture\FactureTable;
 use App\Http\Livewire\RapportInterets;
 use App\Http\Livewire\GestionInterets;
 use Illuminate\Support\Facades\Route;
@@ -55,12 +56,14 @@ Route::middleware(['auth'])->group(function () {
 
     // Relevés d'intérêts moratoires
     Route::get('/releves/{releve}/interets', [ReleveInteretsController::class, 'show'])->name('releves.interets');
-
+    // Livewire page pour détails / gestion du relevé — nom différent
+    Route::get('/releves/{releve}', ReleveDetails::class)
+        ->name('releves.show');
     // Upload du PDF pour une facture
     Route::post('/factures/{facture}/upload-pdf', [FacturePdfController::class, 'upload'])->name('factures.upload_pdf');
     // Envoi d'email pour une facture
     Route::post('/factures/{facture}/send-email', [EmailController::class, 'sendFactureEmail'])->name('factures.send_email');
-    
+
     // Affichage des PDFs
     Route::get('/storage/releves/{filename}', function ($filename) {
         $path = storage_path('app/public/releves/' . $filename);
@@ -69,7 +72,7 @@ Route::middleware(['auth'])->group(function () {
         }
         return response()->file($path);
     })->name('releves.pdf');
-    
+
     Route::get('/storage/factures/{filename}', function ($filename) {
         $path = storage_path('app/public/factures/' . $filename);
         if (!file_exists($path)) {

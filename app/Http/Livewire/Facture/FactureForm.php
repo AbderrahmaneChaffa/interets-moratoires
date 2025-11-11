@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Http\Livewire\Facture;
 
 use Livewire\Component;
 use App\Models\Facture;
@@ -58,7 +58,8 @@ class FactureForm extends Component
 
         try {
             if ($this->facture_pdf) {
-                $pdfPath = $this->facture_pdf->store('factures', 'public');;
+                $pdfPath = $this->facture_pdf->store('factures', 'public');
+                ;
             }
 
             // Créer la facture
@@ -120,6 +121,6 @@ class FactureForm extends Component
         $statuts = Facture::getStatutsDisponibles();
         $clients = Client::orderBy('raison_sociale')->get();
         // dd($clients);
-        return view('livewire.facture-form', compact('statuts', 'clients'));
+        return view('livewire.facture.facture-form', compact('statuts', 'clients'));
     }
 }

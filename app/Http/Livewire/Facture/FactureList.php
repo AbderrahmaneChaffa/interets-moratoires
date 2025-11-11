@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Http\Livewire\Facture;
 
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -91,7 +91,7 @@ class FactureList extends Component
         $factures = $query->orderBy('date_facture', 'desc')->paginate(15);
         $clients = Client::orderBy('raison_sociale')->get();
 
-        return view('livewire.facture-list', compact('factures', 'clients'));
+        return view('livewire.facture.facture-list', compact('factures', 'clients'));
     }
 
     public function resetFilters()

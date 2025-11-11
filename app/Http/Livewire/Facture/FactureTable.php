@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Http\Livewire\Facture;
 
 use Livewire\Component;
 use App\Models\Facture;
@@ -85,7 +85,7 @@ class FactureTable extends Component
         if ($facture->date_depot && is_null($facture->date_reglement)) {
             $jours_retards = now()->diffInDays(Carbon::parse($facture->date_depot));
         }
-        
+
         $result = $facture->calculerInteretsMoratoires($jours_retards);
         return [
             'jours_retards' => $jours_retards,
@@ -97,7 +97,7 @@ class FactureTable extends Component
     public function render()
     {
         $factures = $this->getFilteredFactures();
-        
+
         // Calculer les intérêts pour chaque facture
         $facturesWithInterets = $factures->map(function ($facture) {
             $interets = $this->calculateInterets($facture);
@@ -107,7 +107,7 @@ class FactureTable extends Component
             return $facture;
         });
 
-        return view('livewire.facture-table', [
+        return view('livewire.facture.facture-table', [
             'factures' => $facturesWithInterets
         ]);
     }

@@ -22,24 +22,24 @@
     </div>
 
     @if (session()->has('message'))
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
-        <i class="fas fa-check-circle"></i> {{ session('message') }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle"></i> {{ session('message') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
     @endif
 
     @if (session()->has('error'))
-    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-        <i class="fas fa-exclamation-circle"></i> {{ session('error') }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle"></i> {{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
     @endif
 
     @if (session()->has('info'))
-    <div class="alert alert-info alert-dismissible fade show" role="alert">
-        <i class="fas fa-info-circle"></i> {{ session('info') }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
+        <div class="alert alert-info alert-dismissible fade show" role="alert">
+            <i class="fas fa-info-circle"></i> {{ session('info') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
     @endif
 
     <!-- Filtres améliorés -->
@@ -54,7 +54,7 @@
                     <select wire:model.live="selectedClient" class="form-select">
                         <option value="">Tous les clients</option>
                         @foreach ($clients as $client)
-                        <option value="{{ $client->id }}">{{ $client->raison_sociale }}</option>
+                            <option value="{{ $client->id }}">{{ $client->raison_sociale }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -126,108 +126,112 @@
                     </thead>
                     <tbody>
                         @forelse ($releves as $releve)
-                        <tr class="border-bottom" style="position: relative;">
-                            <td class="px-3 py-3">
-                                <div>
-                                    <strong class="text-primary">{{ $releve->reference }}</strong>
-                                    @if ($releve->categorie)
-                                    <br><small class="text-muted">{{ Str::limit($releve->categorie, 30) }}</small>
+                            <tr class="border-bottom" style="position: relative;">
+                                <td class="px-3 py-3">
+                                    <div>
+                                        <strong class="text-primary">{{ $releve->reference }}</strong>
+                                        @if ($releve->categorie)
+                                            <br><small class="text-muted">{{ Str::limit($releve->categorie, 30) }}</small>
+                                        @endif
+                                    </div>
+                                </td>
+                                <td class="px-3 py-3">
+                                    <div>
+                                        <span class="fw-medium">{{ $releve->client->raison_sociale ?? '-' }}</span>
+                                        @if ($releve->client->email)
+                                            <br><small class="text-muted"><i class="fas fa-envelope"></i>
+                                                {{ $releve->client->email }}</small>
+                                        @endif
+                                    </div>
+                                </td>
+                                <td class="px-3 py-3 text-center" data-order="{{ $releve->date_debut->format('Y-m-d') }}">
+                                    <div>
+                                        <span class="fw-medium">{{ $releve->date_debut->format('d/m/Y') }}</span>
+                                        <br><small class="text-muted">au</small>
+                                        <br><span class="fw-medium">{{ $releve->date_fin->format('d/m/Y') }}</span>
+                                    </div>
+                                </td>
+                                <td class="px-3 py-3 text-center"
+                                    data-order="{{ $releve->date_creation->format('Y-m-d') }}">
+                                    <span class="fw-bold">{{ $releve->date_creation->format('d/m/Y') }}</span>
+                                    @if($releve->date_derniere_facture)
+                                        <br><small class="text-info"><i class="fas fa-calendar"></i>
+                                            Dernière facture: {{ $releve->date_derniere_facture->format('d/m/Y') }}</small>
                                     @endif
-                                </div>
-                            </td>
-                            <td class="px-3 py-3">
-                                <div>
-                                    <span class="fw-medium">{{ $releve->client->raison_sociale ?? '-' }}</span>
-                                    @if ($releve->client->email)
-                                    <br><small class="text-muted"><i class="fas fa-envelope"></i>
-                                        {{ $releve->client->email }}</small>
-                                    @endif
-                                </div>
-                            </td>
-                            <td class="px-3 py-3 text-center" data-order="{{ $releve->date_debut->format('Y-m-d') }}">
-                                <div>
-                                    <span class="fw-medium">{{ $releve->date_debut->format('d/m/Y') }}</span>
-                                    <br><small class="text-muted">au</small>
-                                    <br><span class="fw-medium">{{ $releve->date_fin->format('d/m/Y') }}</span>
-                                </div>
-                            </td>
-                            <td class="px-3 py-3 text-center" data-order="{{ $releve->date_creation->format('Y-m-d') }}">
-                                <span class="fw-bold">{{ $releve->date_creation->format('d/m/Y') }}</span>
-                                @if($releve->date_derniere_facture)
-                                <br><small class="text-info"><i class="fas fa-calendar"></i>
-                                    Dernière facture: {{ $releve->date_derniere_facture->format('d/m/Y') }}</small>
-                                @endif
-                            </td>
-                            <td class="px-3 py-3 text-end" data-order="{{ $releve->montant_total_ht }}">
-                                <span class="fw-bold text-dark">{{ number_format($releve->montant_total_ht, 2, ',', ' ') }} DA</span>
-                            </td>
-                            <td class="px-3 py-3 text-center">
-                                <div>
-                                    <span class="badge fs-6 px-2 py-1
-                                                @if ($releve->statut === 'Payé') bg-success
-                                                @elseif($releve->statut === 'Impayé') bg-danger
-                                                @else bg-secondary @endif">
-                                        {{ $releve->statut }}
-                                    </span>
-                                </div>
-                            </td>
-                            <td class="px-3 py-3 text-center">
-                                <span class="badge bg-info">{{ $releve->factures->count() }} facture(s)</span>
-                            </td>
-                            <td class="px-3 py-3">
-                                <!-- Actions compactes -->
-                                <div class="d-flex gap-1 justify-content-center flex-wrap">
-                                    @if ($releve->releve_pdf)
-                                    <a href="{{ route('releves.pdf', basename($releve->releve_pdf)) }}" target="_blank"
-                                        class="btn btn-sm btn-outline-secondary" title="Voir PDF"
-                                        data-bs-toggle="tooltip">
-                                        <i class="fas fa-file-pdf"></i>
-                                    </a>
-                                    @endif
+                                </td>
+                                <td class="px-3 py-3 text-end" data-order="{{ $releve->montant_total_ht }}">
+                                    <span
+                                        class="fw-bold text-dark">{{ number_format($releve->montant_total_ht, 2, ',', ' ') }}
+                                        DA</span>
+                                </td>
+                                <td class="px-3 py-3 text-center">
+                                    <div>
+                                        <span class="badge fs-6 px-2 py-1
+                                                            @if ($releve->statut === 'Payé') bg-success
+                                                            @elseif($releve->statut === 'Impayé') bg-danger
+                                                            @else bg-secondary @endif">
+                                            {{ $releve->statut }}
+                                        </span>
+                                    </div>
+                                </td>
+                                <td class="px-3 py-3 text-center">
+                                    <span class="badge bg-info">{{ $releve->factures->count() }} facture(s)</span>
+                                </td>
+                                <td class="px-3 py-3">
+                                    <!-- Actions compactes -->
+                                    <div class="d-flex gap-1 justify-content-center flex-wrap">
+                                        @if ($releve->releve_pdf)
+                                            <a href="{{ route('releves.pdf', basename($releve->releve_pdf)) }}" target="_blank"
+                                                class="btn btn-sm btn-outline-secondary" title="Voir PDF"
+                                                data-bs-toggle="tooltip">
+                                                <i class="fas fa-file-pdf"></i>
+                                            </a>
+                                        @endif
 
-                                    <!-- Boutons d'actions horizontaux -->
-                                    <button class="btn btn-sm btn-outline-info"
-                                        wire:click="showDetails({{ $releve->id }})" title="Voir détails"
-                                        data-bs-toggle="tooltip">
-                                        <i class="fas fa-eye"></i>
-                                    </button>
+                                        <!-- Boutons d'actions horizontaux -->
+                                        <button class="btn btn-sm btn-outline-info"
+                                            wire:click="showDetails({{ $releve->id }})" title="Voir détails"
+                                            data-bs-toggle="tooltip">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
 
-                                    <button class="btn btn-sm btn-outline-warning"
-                                        wire:click="openEdit({{ $releve->id }})" title="Modifier"
-                                        data-bs-toggle="tooltip">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
+                                        <button class="btn btn-sm btn-outline-warning"
+                                            wire:click="openEdit({{ $releve->id }})" title="Modifier"
+                                            data-bs-toggle="tooltip">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
 
-                                    <button class="btn btn-sm btn-outline-secondary"
-                                        wire:click="calculerInterets({{ $releve->id }})" title="Calculer intérêts"
-                                        data-bs-toggle="tooltip">
-                                        <i class="fas fa-calculator"></i>
-                                    </button>
+                                        <button class="btn btn-sm btn-outline-secondary"
+                                            wire:click="calculerInterets({{ $releve->id }})" title="Calculer intérêts"
+                                            data-bs-toggle="tooltip">
+                                            <i class="fas fa-calculator"></i>
+                                        </button>
 
-                                    <a class="btn btn-sm btn-outline-primary"
-                                        href="{{ route('releves.interets', $releve->id) }}" title="Gérer intérêts"
-                                        data-bs-toggle="tooltip">
-                                        <i class="fas fa-cogs"></i>
-                                    </a>
+                                        <a class="btn btn-sm btn-outline-primary"
+                                            href="{{ route('releves.show', $releve->id) }}" title="Gérer intérêts"
+                                            data-bs-toggle="tooltip">
+                                            <i class="fas fa-cogs"></i>
+                                        </a>
 
-                                    <button class="btn btn-sm btn-outline-danger"
-                                        wire:click="confirmDelete({{ $releve->id }})" title="Supprimer"
-                                        data-bs-toggle="tooltip">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
+
+                                        <button class="btn btn-sm btn-outline-danger"
+                                            wire:click="confirmDelete({{ $releve->id }})" title="Supprimer"
+                                            data-bs-toggle="tooltip">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
                         @empty
-                        <tr>
-                            <td colspan="8" class="text-center py-5">
-                                <div class="text-muted">
-                                    <i class="fas fa-inbox fa-3x mb-3"></i>
-                                    <h5>Aucun relevé trouvé</h5>
-                                    <p>Aucun relevé ne correspond aux critères de recherche.</p>
-                                </div>
-                            </td>
-                        </tr>
+                            <tr>
+                                <td colspan="8" class="text-center py-5">
+                                    <div class="text-muted">
+                                        <i class="fas fa-inbox fa-3x mb-3"></i>
+                                        <h5>Aucun relevé trouvé</h5>
+                                        <p>Aucun relevé ne correspond aux critères de recherche.</p>
+                                    </div>
+                                </td>
+                            </tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -242,238 +246,248 @@
 
     <!-- Modal Détails -->
     @if ($showDetailsModal && $releveDetails)
-    <div class="modal fade show" style="display: block;" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">
-                        <i class="fas fa-list-alt"></i> Détails du relevé {{ $releveDetails->reference }}
-                    </h5>
-                    <button type="button" class="btn-close" wire:click="$set('showDetailsModal', false)"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <h6>Informations générales</h6>
-                            <table class="table table-sm">
-                                <tr>
-                                    <td><strong>Client:</strong></td>
-                                    <td>{{ $releveDetails->client->raison_sociale }}</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Référence:</strong></td>
-                                    <td>{{ $releveDetails->reference }}</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Période:</strong></td>
-                                    <td>{{ $releveDetails->date_debut->format('d/m/Y') }} - {{ $releveDetails->date_fin->format('d/m/Y') }}</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Date création:</strong></td>
-                                    <td>{{ $releveDetails->date_creation->format('d/m/Y') }}</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Catégorie:</strong></td>
-                                    <td>{{ $releveDetails->categorie ?? '-' }}</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Montant total HT:</strong></td>
-                                    <td>{{ number_format($releveDetails->montant_total_ht, 2, ',', ' ') }} DA</td>
-                                </tr>
-                            </table>
-                        </div>
-                        <div class="col-md-6">
-                            <h6>Informations complémentaires</h6>
-                            <table class="table table-sm">
-                                <tr>
-                                    <td><strong>Statut:</strong></td>
-                                    <td>
-                                        <span class="badge bg-{{ $releveDetails->statut === 'Payé' ? 'success' : ($releveDetails->statut === 'Impayé' ? 'danger' : 'secondary') }}">
-                                            {{ $releveDetails->statut }}
-                                        </span>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Date dernière facture:</strong></td>
-                                    <td>{{ $releveDetails->date_derniere_facture ? $releveDetails->date_derniere_facture->format('d/m/Y') : '-' }}</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Nombre de factures:</strong></td>
-                                    <td>{{ $releveDetails->factures->count() }}</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>PDF relevé:</strong></td>
-                                    <td>
-                                        @if($releveDetails->releve_pdf)
-                                            <a href="{{ route('releves.pdf', basename($releveDetails->releve_pdf)) }}" target="_blank" class="btn btn-sm btn-outline-primary">
-                                                <i class="fas fa-file-pdf"></i> Voir PDF
-                                            </a>
-                                        @else
-                                            <span class="text-muted">Aucun PDF</span>
-                                        @endif
-                                    </td>
-                                </tr>
-                            </table>
-                        </div>
+        <div class="modal fade show" style="display: block;" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="fas fa-list-alt"></i> Détails du relevé {{ $releveDetails->reference }}
+                        </h5>
+                        <button type="button" class="btn-close" wire:click="$set('showDetailsModal', false)"></button>
                     </div>
-
-                    @if ($releveDetails->factures->count() > 0)
-                    <div class="mt-4">
-                        <h6>Factures du relevé</h6>
-                        <div class="table-responsive">
-                            <table class="table table-sm table-striped">
-                                <thead>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>Informations générales</h6>
+                                <table class="table table-sm">
                                     <tr>
-                                        <th>Référence</th>
-                                        <th>Date facture</th>
-                                        <th>Montant HT</th>
-                                        <th>Net à payer</th>
-                                        <th>Statut</th>
-                                        <th>PDF</th>
+                                        <td><strong>Client:</strong></td>
+                                        <td>{{ $releveDetails->client->raison_sociale }}</td>
                                     </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach ($releveDetails->factures as $facture)
                                     <tr>
-                                        <td>{{ $facture->reference }}</td>
-                                        <td>{{ $facture->date_facture->format('d/m/Y') }}</td>
-                                        <td class="text-end">{{ number_format($facture->montant_ht, 2, ',', ' ') }} DA</td>
-                                        <td class="text-end">{{ number_format($facture->net_a_payer, 2, ',', ' ') }} DA</td>
+                                        <td><strong>Référence:</strong></td>
+                                        <td>{{ $releveDetails->reference }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Période:</strong></td>
+                                        <td>{{ $releveDetails->date_debut->format('d/m/Y') }} -
+                                            {{ $releveDetails->date_fin->format('d/m/Y') }}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Date création:</strong></td>
+                                        <td>{{ $releveDetails->date_creation->format('d/m/Y') }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Catégorie:</strong></td>
+                                        <td>{{ $releveDetails->categorie ?? '-' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Montant total HT:</strong></td>
+                                        <td>{{ number_format($releveDetails->montant_total_ht, 2, ',', ' ') }} DA</td>
+                                    </tr>
+                                </table>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>Informations complémentaires</h6>
+                                <table class="table table-sm">
+                                    <tr>
+                                        <td><strong>Statut:</strong></td>
                                         <td>
-                                            <span class="badge bg-{{ $facture->statut === 'Payée' ? 'success' : ($facture->statut === 'Impayée' ? 'danger' : 'warning') }}">
-                                                {{ $facture->statut }}
+                                            <span
+                                                class="badge bg-{{ $releveDetails->statut === 'Payé' ? 'success' : ($releveDetails->statut === 'Impayé' ? 'danger' : 'secondary') }}">
+                                                {{ $releveDetails->statut }}
                                             </span>
                                         </td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Date dernière facture:</strong></td>
+                                        <td>{{ $releveDetails->date_derniere_facture ? $releveDetails->date_derniere_facture->format('d/m/Y') : '-' }}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Nombre de factures:</strong></td>
+                                        <td>{{ $releveDetails->factures->count() }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>PDF relevé:</strong></td>
                                         <td>
-                                            @if($facture->pdf_path)
-                                                <a href="{{ route('factures.pdf', basename($facture->pdf_path)) }}" target="_blank" class="btn btn-sm btn-outline-primary">
-                                                    <i class="fas fa-file-pdf"></i>
+                                            @if($releveDetails->releve_pdf)
+                                                <a href="{{ route('releves.pdf', basename($releveDetails->releve_pdf)) }}"
+                                                    target="_blank" class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-file-pdf"></i> Voir PDF
                                                 </a>
                                             @else
-                                                <span class="text-muted">-</span>
+                                                <span class="text-muted">Aucun PDF</span>
                                             @endif
                                         </td>
                                     </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
+                                </table>
+                            </div>
                         </div>
+
+                        @if ($releveDetails->factures->count() > 0)
+                            <div class="mt-4">
+                                <h6>Factures du relevé</h6>
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Référence</th>
+                                                <th>Date facture</th>
+                                                <th>Montant HT</th>
+                                                <th>Net à payer</th>
+                                                <th>Statut</th>
+                                                <th>PDF</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach ($releveDetails->factures as $facture)
+                                                <tr>
+                                                    <td>{{ $facture->reference }}</td>
+                                                    <td>{{ $facture->date_facture->format('d/m/Y') }}</td>
+                                                    <td class="text-end">{{ number_format($facture->montant_ht, 2, ',', ' ') }} DA
+                                                    </td>
+                                                    <td class="text-end">{{ number_format($facture->net_a_payer, 2, ',', ' ') }} DA
+                                                    </td>
+                                                    <td>
+                                                        <span
+                                                            class="badge bg-{{ $facture->statut === 'Payée' ? 'success' : ($facture->statut === 'Impayée' ? 'danger' : 'warning') }}">
+                                                            {{ $facture->statut }}
+                                                        </span>
+                                                    </td>
+                                                    <td>
+                                                        @if($facture->pdf_path)
+                                                            <a href="{{ route('factures.pdf', basename($facture->pdf_path)) }}"
+                                                                target="_blank" class="btn btn-sm btn-outline-primary">
+                                                                <i class="fas fa-file-pdf"></i>
+                                                            </a>
+                                                        @else
+                                                            <span class="text-muted">-</span>
+                                                        @endif
+                                                    </td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        @endif
                     </div>
-                    @endif
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary"
-                        wire:click="$set('showDetailsModal', false)">Fermer</button>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary"
+                            wire:click="$set('showDetailsModal', false)">Fermer</button>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-    <div class="modal-backdrop fade show"></div>
+        <div class="modal-backdrop fade show"></div>
     @endif
 
     <!-- Modal Édition -->
     @if ($showModal)
-    <div class="modal fade show" style="display: block;" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">
-                        <i class="fas fa-edit"></i> Modifier le relevé
-                    </h5>
-                    <button type="button" class="btn-close" wire:click="$set('showModal', false)"></button>
-                </div>
-                <form wire:submit.prevent="save">
-                    <div class="modal-body">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="reference" class="form-label">Référence *</label>
-                                    <input type="text" wire:model="reference"
-                                        class="form-control @error('reference') is-invalid @enderror" disabled>
-                                    @error('reference')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
+        <div class="modal fade show" style="display: block;" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="fas fa-edit"></i> Modifier le relevé
+                        </h5>
+                        <button type="button" class="btn-close" wire:click="$set('showModal', false)"></button>
+                    </div>
+                    <form wire:submit.prevent="save">
+                        <div class="modal-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="reference" class="form-label">Référence *</label>
+                                        <input type="text" wire:model="reference"
+                                            class="form-control @error('reference') is-invalid @enderror" disabled>
+                                        @error('reference')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="statut" class="form-label">Statut *</label>
+                                        <select wire:model="statut"
+                                            class="form-select @error('statut') is-invalid @enderror">
+                                            <option value="">Sélectionner...</option>
+                                            <option value="Payé">Payé</option>
+                                            <option value="Impayé">Impayé</option>
+                                        </select>
+                                        @error('statut')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
                                 </div>
                             </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="statut" class="form-label">Statut *</label>
-                                    <select wire:model="statut"
-                                        class="form-select @error('statut') is-invalid @enderror">
-                                        <option value="">Sélectionner...</option>
-                                        <option value="Payé">Payé</option>
-                                        <option value="Impayé">Impayé</option>
-                                    </select>
-                                    @error('statut')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
-                        </div>
 
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="date_derniere_facture" class="form-label">Date dernière facture</label>
-                                    <input type="date" wire:model="date_derniere_facture"
-                                        class="form-control @error('date_derniere_facture') is-invalid @enderror">
-                                    @error('date_derniere_facture')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="date_derniere_facture" class="form-label">Date dernière facture</label>
+                                        <input type="date" wire:model="date_derniere_facture"
+                                            class="form-control @error('date_derniere_facture') is-invalid @enderror">
+                                        @error('date_derniere_facture')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="montant_total_ht" class="form-label">Montant total HT</label>
-                                    <input type="number" step="0.01" wire:model="montant_total_ht"
-                                        class="form-control @error('montant_total_ht') is-invalid @enderror">
-                                    @error('montant_total_ht')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="montant_total_ht" class="form-label">Montant total HT</label>
+                                        <input type="number" step="0.01" wire:model="montant_total_ht"
+                                            class="form-control @error('montant_total_ht') is-invalid @enderror">
+                                        @error('montant_total_ht')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary"
-                            wire:click="$set('showModal', false)">Annuler</button>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-save"></i> Enregistrer
-                        </button>
-                    </div>
-                </form>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary"
+                                wire:click="$set('showModal', false)">Annuler</button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Enregistrer
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
-    </div>
-    <div class="modal-backdrop fade show"></div>
+        <div class="modal-backdrop fade show"></div>
     @endif
 
     <!-- Modal Suppression -->
     @if ($showDeleteModal)
-    <div class="modal fade show" style="display: block;" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">
-                        <i class="fas fa-exclamation-triangle text-danger"></i> Confirmer la suppression
-                    </h5>
-                    <button type="button" class="btn-close" wire:click="$set('showDeleteModal', false)"></button>
-                </div>
-                <div class="modal-body">
-                    <p>Êtes-vous sûr de vouloir supprimer ce relevé ?</p>
-                    <p class="text-muted">Cette action est irréversible et supprimera également toutes les factures et intérêts associés.</p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary"
-                        wire:click="$set('showDeleteModal', false)">Annuler</button>
-                    <button type="button" class="btn btn-danger" wire:click="delete">
-                        <i class="fas fa-trash"></i> Supprimer
-                    </button>
+        <div class="modal fade show" style="display: block;" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="fas fa-exclamation-triangle text-danger"></i> Confirmer la suppression
+                        </h5>
+                        <button type="button" class="btn-close" wire:click="$set('showDeleteModal', false)"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Êtes-vous sûr de vouloir supprimer ce relevé ?</p>
+                        <p class="text-muted">Cette action est irréversible et supprimera également toutes les factures et
+                            intérêts associés.</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary"
+                            wire:click="$set('showDeleteModal', false)">Annuler</button>
+                        <button type="button" class="btn btn-danger" wire:click="delete">
+                            <i class="fas fa-trash"></i> Supprimer
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-    <div class="modal-backdrop fade show"></div>
+        <div class="modal-backdrop fade show"></div>
     @endif
 
     <!-- Styles et scripts -->
@@ -517,11 +531,11 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             console.log('[v0] Initializing export and sort functionality for Livewire v2...');
 
             // Export to Excel function
-            window.exportToExcel = function() {
+            window.exportToExcel = function () {
                 try {
                     console.log('[v0] Starting Excel export...');
                     if (typeof XLSX === 'undefined') {
@@ -548,7 +562,7 @@
             };
 
             // Export to PDF function
-            window.exportToPDF = function() {
+            window.exportToPDF = function () {
                 try {
                     console.log('[v0] Starting PDF export...');
 
@@ -644,7 +658,7 @@
             };
 
             // Print table function
-            window.printTable = function() {
+            window.printTable = function () {
                 try {
                     console.log('[v0] Starting print...');
                     const printWindow = window.open('', '_blank');
@@ -711,7 +725,7 @@
             // Sort functionality
             let sortDirection = {};
 
-            window.sortTable = function(columnIndex, columnName) {
+            window.sortTable = function (columnIndex, columnName) {
                 try {
                     console.log(`[v0] Sorting table by column ${columnIndex} (${columnName})`);
                     const table = document.getElementById('relevesTable');
@@ -765,7 +779,7 @@
             };
 
             // Check libraries after page load
-            setTimeout(function() {
+            setTimeout(function () {
                 console.log('[v0] Library status check:');
                 console.log('[v0] XLSX available:', typeof XLSX !== 'undefined');
                 console.log('[v0] jsPDF available:', typeof window.jspdf !== 'undefined');
@@ -773,13 +787,12 @@
             }, 1000);
         });
 
-        document.addEventListener('livewire:load', function() {
+        document.addEventListener('livewire:load', function () {
             console.log('[v0] Livewire v2 loaded - reinitializing functions');
         });
 
-        document.addEventListener('livewire:update', function() {
+        document.addEventListener('livewire:update', function () {
             console.log('[v0] Livewire v2 updated - functions still available');
         });
     </script>
 </div>
-
