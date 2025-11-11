@@ -1,19 +1,18 @@
 <div wire:poll.2000ms>
     <x-app-layout>
-        <x-slot name="header">
+        <!-- <x-slot name="header">
             <div class="d-flex justify-content-between align-items-center">
                 <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                    <i class="fas fa-list"></i> Relevé d'intérêts moratoires
+                    <i class="fas fa-list"></i> Relevé d'intérêts moratoires 12345678
                 </h2>
                 <a href="{{ route('factures') }}" class="btn btn-outline-secondary">
                     <i class="fas fa-arrow-left"></i> Retour
                 </a>
             </div>
-        </x-slot>
+        </x-slot> -->
 
         <div class="py-12">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-
+            <div class="max-w-7xl mx-auto sm:px-6 lg:px-2">
                 {{-- Card Détails du Relevé --}}
                 <div class="card shadow-sm mb-4 border-0">
                     <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
@@ -37,7 +36,7 @@
                                 </button>
                             @endif
 
-                            <a href="{{ route('factures') }}" class="btn btn-outline-light btn-sm">
+                            <a href="{{ route('releves') }}" class="btn btn-outline-light btn-sm">
                                 <i class="fas fa-arrow-left"></i> Retour
                             </a>
                         </div>
