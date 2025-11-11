@@ -1,4 +1,4 @@
-<div wire:poll.2000ms>
+<div>
     <x-app-layout>
         <!-- <x-slot name="header">
             <div class="d-flex justify-content-between align-items-center">
@@ -89,19 +89,21 @@
                 </div>
 
                 {{-- Section Factures du relevé --}}
-                @if(optional($releve->factures)->count() > 0)
+
+                <!-- Section Factures du relevé -->
+                @if($releve->factures->count() > 0)
                     <div class="card mb-4">
                         <div class="card-header d-flex justify-content-between align-items-center">
-                            <h5 class="mb-0"><i class="fas fa-file-invoice"></i> Factures du relevé</h5>
-
-                            @if($this->nonPayees > 0)
-                                <button class="btn btn-success btn-sm"
-                                    wire:click="$emitTo('factures-pay-all-modal', 'open', {{ $releve->id }})">
-                                    <i class="fas fa-check-double"></i> Marquer toutes comme payées ({{ $this->nonPayees }})
+                            <h5 class="mb-0"><i class="fas fa-file-invoice"></i> Factures du relevé </h5>
+                            @php
+                                $nonPayees = $releve->factures->where('statut', '!=', 'Payé')->count();
+                            @endphp
+                            @if($nonPayees > 0)
+                                <button class="btn btn-success btn-sm" wire:click="Livewire.emit('openFacturesPayAllModal')">
+                                    <i class="fas fa-check-double"></i> Marquer toutes comme payées ({{ $nonPayees }})
                                 </button>
                             @endif
                         </div>
-
                         <div class="card-body">
                             <div class="table-responsive">
                                 <table class="table table-striped">
@@ -118,15 +120,17 @@
                                     </thead>
                                     <tbody>
                                         @foreach($releve->factures as $facture)
-                                            @php $statut = $facture->statut ?? 'Impayé'; @endphp
                                             <tr>
                                                 <td>{{ $facture->reference }}</td>
-                                                <td>{{ optional($facture->date_facture)->format('d/m/Y') }}</td>
+                                                <td>{{ $facture->date_facture->format('d/m/Y') }}</td>
                                                 <td class="text-end">{{ number_format($facture->montant_ht, 2, ',', ' ') }} DA
                                                 </td>
                                                 <td class="text-end">{{ number_format($facture->net_a_payer, 2, ',', ' ') }} DA
                                                 </td>
                                                 <td>
+                                                    @php
+                                                        $statut = $facture->statut ?? 'Impayé';
+                                                    @endphp
                                                     @if($statut === 'Payé')
                                                         <span class="badge bg-success">Payé</span>
                                                     @else
@@ -147,7 +151,7 @@
                                                     <div class="btn-group btn-group-sm" role="group">
                                                         @if($statut !== 'Payé')
                                                             <button class="btn btn-outline-primary"
-                                                                wire:click="$emitTo('facture-pay-modal', 'openFacturePayModal', {{ $facture->id }})"
+                                                                wire:click="openFacturePayModal({{ $facture->id }})"
                                                                 title="Marquer comme payée">
                                                                 <i class="fas fa-money-check-alt"></i>
                                                             </button>
@@ -167,6 +171,69 @@
                             </div>
                         </div>
                     </div>
+                    <!-- Modal: Marquer facture comme payée -->
+                    <div wire:ignore.self>
+                        @if($showFacturePayModal)
+                            <div class="modal fade show d-block" tabindex="-1" role="dialog"
+                                style="background: rgba(0,0,0,0.5);">
+                                <div class="modal-dialog modal-dialog-centered" role="document">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">Confirmer le paiement de la facture</h5>
+                                            <button type="button" class="btn-close" wire:click="closeModals"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <p>Voulez-vous vraiment marquer cette facture comme <strong>payée</strong> ?</p>
+                                            <p class="text-muted small">La date de règlement sera définie à aujourd'hui si elle
+                                                n'est pas déjà
+                                                renseignée.</p>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary"
+                                                wire:click="closeModals">Annuler</button>
+                                            <button type="button" class="btn btn-success" wire:click="marquerFacturePaye">
+                                                <i class="fas fa-check"></i> Confirmer
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+                    </div>
+                    <!-- Modal: Marquer toutes les factures comme payées -->
+                    <div wire:ignore.self>
+                        @if($showFacturesPayAllModal)
+                            <div class="modal fade show d-block" tabindex="-1" role="dialog"
+                                style="background: rgba(0,0,0,0.5);">
+                                <div class="modal-dialog modal-dialog-centered" role="document">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">Marquer toutes les factures comme payées</h5>
+                                            <button type="button" class="btn-close" wire:click="closeModals"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <p>Voulez-vous vraiment marquer <strong>toutes les factures non payées</strong> de
+                                                ce
+                                                relevé comme
+                                                payées ?</p>
+                                            <p class="text-muted small">La date de règlement sera définie à aujourd'hui pour
+                                                toutes
+                                                les factures
+                                                qui n'en ont pas encore.</p>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary"
+                                                wire:click="closeModals">Annuler</button>
+                                            <button type="button" class="btn btn-success"
+                                                wire:click="marquerToutesFacturesPayees">
+                                                <i class="fas fa-check-double"></i> Confirmer
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+                    </div>
                 @endif
 
                 {{-- Card intérêts --}}
@@ -182,7 +249,9 @@
                     </div>
 
                     <div class="card-body">
-                        @livewire('releve-interets', ['releveId' => $releve->id], key('releve-' . $releve->id))
+                        <div wire:ignore.self>
+                            @livewire('releve-interets', ['releveId' => $releve->id], key('releve-' . $releve->id))
+                        </div>
                     </div>
                 </div>
             </div>
