@@ -156,13 +156,22 @@ class ReleveInterets extends Component
             'date' => now()->format('d/m/Y'),
         ];
 
-        // render view invoice -> pdf
+        // // render view invoice -> pdf
+        // $pdf = Pdf::loadView('invoices.interets', $data);
+        // $fileName = $filenamePrefix . '_' . now()->format('Ymd_His') . '.pdf';
+        // $path = "invoices/releves/{$this->releveId}/{$fileName}";
         $pdf = Pdf::loadView('invoices.interets', $data);
+
+        // Storage::put($path, $pdf->output());
         $fileName = $filenamePrefix . '_' . now()->format('Ymd_His') . '.pdf';
+        // Utiliser le disque "public" (accessible via storage:link)
         $path = "invoices/releves/{$this->releveId}/{$fileName}";
 
-        Storage::put($path, $pdf->output());
+        // Écrire le fichier et définir la visibilité publique
+        Storage::disk('public')->put($path, $pdf->output());
 
+        // URL publique (ex: /storage/invoices/releves/123/...)
+        $url = Storage::disk('public')->url($path);
         // créer une entrée invoice dans la table invoices
         $invoice = Invoice::create([
             'releve_id' => $this->releveId,
