@@ -43,6 +43,7 @@ class ReleveInterets extends Component
         'openFacturePayModal' => 'openFacturePayModal',
         'openFacturesPayAllModal' => 'openFacturesPayAllModal',
         'marquerFactureImpaye' => 'marquerFactureImpaye',
+        'refreshPeriodes' => 'loadPeriodes',
     ];
 
     public function mount($releveId)
