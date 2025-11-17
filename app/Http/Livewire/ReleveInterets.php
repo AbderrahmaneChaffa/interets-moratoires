@@ -2,6 +2,9 @@
 
 namespace App\Http\Livewire;
 
+use App\Models\Invoice;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
 use App\Models\Releve;
 use App\Models\Interet;
@@ -12,6 +15,8 @@ class ReleveInterets extends Component
 {
     public $releveId;
     public $releve;
+    public $releveStatus;
+    public $releveAmount;
     public $periodes = [];
 
     // Modals
@@ -23,9 +28,15 @@ class ReleveInterets extends Component
 
     // Factures modals
     public $showFacturePayModal = false;
+    public $showInvoiceFacturePayModal = false;
     public $payFactureId = null;
     public $showFacturesPayAllModal = false;
+    // Totaux
+    public $totalImpayes = 0;
+    public $totalImpayesHT = 0;
+    public $totalImpayesTTC = 0;
 
+    public $lastInvoicePath = null;
     protected $listeners = [
         'calculerInteretsReleve' => 'calculer',
         'openRelevePayModal' => 'openRelevePayModal',
@@ -38,14 +49,26 @@ class ReleveInterets extends Component
     {
         $this->releveId = $releveId;
         $this->loadData();
+        $this->loadPeriodes();
     }
 
     public function loadData()
     {
         $this->releve = Releve::with(['client'])->findOrFail($this->releveId);
         $this->refreshPeriodes();
-    }
 
+    }
+    public function loadPeriodes()
+    {
+        // si tu construis $periodes ailleurs, adapte :
+        // $this->periodes = $this->fetchPeriodesFromDbOrCompute();
+        // Exemple placeholder : (ne pas oublier de remplacer par ta logique)
+        // $this->periodes = session('periodes') ?: [];
+
+        // recalculer totaux et info releve
+        $this->computeTotals();
+        $this->loadLastInvoice();
+    }
     public function refreshPeriodes()
     {
         $interets = Interet::where('releve_id', $this->releveId)
@@ -69,6 +92,144 @@ class ReleveInterets extends Component
                 'id' => $i->id,
             ];
         }
+    }
+    protected function computeTotals()
+    {
+        $impayes = collect($this->periodes)->filter(function ($p) {
+            return ($p['statut'] ?? 'Impayé') !== 'Payé';
+        });
+
+        $this->totalImpayesHT = $impayes->sum(fn($p) => floatval($p['interet_ht'] ?? 0));
+        $this->totalImpayesTTC = $impayes->sum(fn($p) => floatval($p['interet_ttc'] ?? 0));
+        $this->totalImpayes = $this->totalImpayesTTC; // ou HT selon besoin
+
+        // releve status / amount (adaptation selon ta structure)
+        $this->releveStatus = $this->releve->statut ?? ($this->totalImpayes == 0 ? 'Payé' : 'Impayé');
+        $this->releveAmount = $this->releve->montant_total_ht ?? null;
+    }
+    protected function loadLastInvoice()
+    {
+        $last = Invoice::where('releve_id', $this->releveId)->latest('created_at')->first();
+        $this->lastInvoicePath = $last?->path;
+    }
+    // Générer facture pour une période donnée
+    public function generateInvoice($periodeId)
+    {
+        $periode = collect($this->periodes)->firstWhere('id', $periodeId);
+        if (!$periode) {
+            $this->dispatchBrowserEvent('notify', ['type' => 'error', 'message' => 'Période introuvable']);
+            return;
+        }
+
+        $periodes = [$periode];
+        $this->createAndStoreInvoice($periodes, "facture_interet_{$periodeId}");
+        $this->loadPeriodes();
+        $this->dispatchBrowserEvent('notify', ['type' => 'success', 'message' => 'Facture générée']);
+    }
+
+    // Générer facture qui regroupe tous les intérêts impayés
+    public function generateInvoiceUnpaid()
+    {
+        $impayes = collect($this->periodes)->filter(fn($p) => ($p['statut'] ?? 'Impayé') !== 'Payé');
+        if ($impayes->isEmpty()) {
+            $this->dispatchBrowserEvent('notify', ['type' => 'info', 'message' => 'Aucun intérêt impayé à facturer']);
+            return;
+        }
+
+        $this->createAndStoreInvoice($impayes->values()->all(), "facture_interets_impayes_releve_{$this->releveId}");
+        $this->loadPeriodes();
+        $this->dispatchBrowserEvent('notify', ['type' => 'success', 'message' => 'Facture globale générée']);
+    }
+
+    protected function createAndStoreInvoice(array $periodes, string $filenamePrefix)
+    {
+        // préparation données pour le PDF
+        $totalHT = collect($periodes)->sum(fn($p) => floatval($p['interet_ht'] ?? 0));
+        $totalTTC = collect($periodes)->sum(fn($p) => floatval($p['interet_ttc'] ?? 0));
+
+        $data = [
+            'periodes' => $periodes,
+            'totalHT' => $totalHT,
+            'totalTTC' => $totalTTC,
+            'releve' => $this->releve,
+            'date' => now()->format('d/m/Y'),
+        ];
+
+        // render view invoice -> pdf
+        $pdf = Pdf::loadView('invoices.interets', $data);
+        $fileName = $filenamePrefix . '_' . now()->format('Ymd_His') . '.pdf';
+        $path = "invoices/releves/{$this->releveId}/{$fileName}";
+
+        Storage::put($path, $pdf->output());
+
+        // créer une entrée invoice dans la table invoices
+        $invoice = Invoice::create([
+            'releve_id' => $this->releveId,
+            'path' => $path,
+            'amount_ht' => $totalHT,
+            'amount_ttc' => $totalTTC,
+            'status' => 'Impayé',
+            'meta' => ['periodes' => collect($periodes)->pluck('id')->all()],
+        ]);
+
+        // Option facultative : lier le pdf_path sur chaque période (si tu veux)
+        foreach ($periodes as $p) {
+            // si tu as un model Period, mets à jour la colonne pdf_path
+            // Period::where('id', $p['id'])->update(['pdf_path' => $path]);
+            // sinon, si tu travailles uniquement en mémoire, ignore
+        }
+
+        // garder pour affichage
+        $this->lastInvoicePath = $path;
+    }
+
+    // télécharger facture (si besoin)
+    public function downloadInvoice($invoiceId)
+    {
+        $inv = Invoice::find($invoiceId);
+        if (!$inv || !Storage::exists($inv->path)) {
+            $this->dispatchBrowserEvent('notify', ['type' => 'error', 'message' => 'Facture introuvable']);
+            return;
+        }
+
+        // redirection directe pour télécharger (Laravel - return response)
+        return response()->streamDownload(function () use ($inv) {
+            echo Storage::get($inv->path);
+        }, basename($inv->path));
+    }
+    // marquer facture payée (utilisé par ton modal)
+    public function marquerInvoiceFacturePaye($invoiceId)
+    {
+        $inv = Invoice::find($invoiceId);
+        if (!$inv) {
+            $this->dispatchBrowserEvent('notify', ['type' => 'error', 'message' => 'Facture introuvable']);
+            return;
+        }
+
+        $inv->update([
+            'status' => 'Payé',
+            'paid_at' => now(),
+        ]);
+
+        // option : marquer les periodes liées comme payées dans ta logique métier
+        $periodesIds = $inv->meta['periodes'] ?? [];
+        foreach ($periodesIds as $pid) {
+            // Period::where('id', $pid)->update(['statut' => 'Payé']);
+        }
+
+        $this->closeModals();
+        $this->loadPeriodes();
+        $this->dispatchBrowserEvent('notify', ['type' => 'success', 'message' => 'Facture marquée comme payée']);
+    }
+
+    public function openInvoiceFacturePayModal($invoiceId)
+    {
+        $inv = Invoice::find($invoiceId);
+        if (!$inv)
+            return;
+        $this->selectedInvoiceId = $inv->id;
+        $this->selectedInvoiceAmount = $inv->amount_ttc;
+        $this->showInvoiceFacturePayModal = true;
     }
 
     public function calculer()
@@ -292,6 +453,9 @@ class ReleveInterets extends Component
 
     public function closeModals()
     {
+        $this->showInvoiceFacturePayModal = false;
+        $this->selectedInvoiceId = null;
+        $this->selectedInvoiceAmount = 0;
         $this->showPayModal = false;
         $this->showValidateAllModal = false;
         $this->showRelevePayModal = false;

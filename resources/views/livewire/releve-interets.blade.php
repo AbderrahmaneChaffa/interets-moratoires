@@ -5,18 +5,27 @@
                 <i class="fas fa-calculator"></i> Calculer les intérêts du relevé
             </button>
         </div>
-        <div>
-            @if(count($periodes) > 0)
-                @php
-                    $nonValides = collect($periodes)->where('valide', false)->count();
-                @endphp
-                @if($nonValides > 0)
-                    <button class="btn btn-success" wire:click="openValidateAllModal">
-                        <i class="fas fa-check-double"></i> Valider tous les intérêts ({{ $nonValides }})
-                    </button>
-                @endif
+        <div class="d-flex gap-2">
+            @if($totalImpayes > 0)
+                <button class="btn btn-warning" wire:click="generateInvoiceUnpaid">
+                    <i class="fas fa-file-invoice-dollar"></i> Générer facture (intérêts impayés)
+                </button>
+            @endif
+
+            @if(!empty($lastInvoicePath))
+                <a href="{{ Storage::url($lastInvoicePath) }}" target="_blank" class="btn btn-outline-primary">
+                    <i class="fas fa-download"></i> Télécharger dernière facture
+                </a>
             @endif
         </div>
+    </div>
+
+    <!-- Résumé du relevé -->
+    <div class="mb-3">
+        <strong>Statut du relevé :</strong> <span
+            class="badge {{ $releveStatus === 'Payé' ? 'bg-success' : 'bg-danger' }}">{{ $releveStatus }}</span>
+        &nbsp; | &nbsp;
+        <strong>Montant relevé :</strong> {{ number_format($releveAmount ?? 0, 2, ',', ' ') }} DA
     </div>
 
     <div class="table-responsive">
@@ -57,9 +66,7 @@
                             @endif
                         </td>
                         <td>
-                            @php
-                                $statut = $p['statut'] ?? 'Impayé';
-                            @endphp
+                            @php $statut = $p['statut'] ?? 'Impayé'; @endphp
                             @if($statut === 'Payé')
                                 <span class="badge bg-success">Payé</span>
                             @else
@@ -86,6 +93,12 @@
                                         title="Marquer comme payé">
                                         <i class="fas fa-money-check-alt"></i>
                                     </button>
+
+                                    <!-- Générer facture pour une seule période -->
+                                    <button class="btn btn-outline-warning" wire:click="generateInvoice({{ $p['id'] }})"
+                                        title="Générer facture (cette période)">
+                                        <i class="fas fa-file-invoice"></i>
+                                    </button>
                                 @endif
                                 <button class="btn btn-outline-danger" wire:click="supprimerInteret({{ $p['id'] }})"
                                     onclick="return confirm('Supprimer cet intérêt ?')" title="Supprimer"
@@ -101,9 +114,20 @@
                     </tr>
                 @endforelse
             </tbody>
+
+            <!-- Footer : total -->
+            <tfoot>
+                <tr class="table-secondary">
+                    <th colspan="4" class="text-end">Total impayé :</th>
+                    <th class="text-end">{{ number_format($totalImpayesHT ?? 0, 2, ',', ' ') }} DA</th>
+                    <th class="text-end">{{ number_format($totalImpayesTTC ?? 0, 2, ',', ' ') }} DA</th>
+                    <th colspan="5"></th>
+                </tr>
+            </tfoot>
         </table>
     </div>
 
+    <!-- (les modals existants: showPayModal, showValidateAllModal, showRelevePayModal) -->
     <!-- Modal: Marquer intérêt comme payé -->
     @if($showPayModal)
         <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background: rgba(0,0,0,0.5);">
@@ -225,6 +249,33 @@
                         <button type="button" class="btn btn-secondary" wire:click="closeModals">Annuler</button>
                         <button type="button" class="btn btn-success" wire:click="marquerToutesFacturesPayees">
                             <i class="fas fa-check-double"></i> Confirmer
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+    <!-- Modal: Marquer facture comme payée (adapté pour invoice sélectionnée) -->
+    @if($showInvoiceFacturePayModal)
+        <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background: rgba(0,0,0,0.5);">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Confirmer le paiement de la facture</h5>
+                        <button type="button" class="btn-close" wire:click="closeModals"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Voulez-vous vraiment marquer cette facture comme <strong>payée</strong> ?</p>
+                        <p class="text-muted small">La date de règlement sera définie à aujourd'hui si elle n'est pas déjà
+                            renseignée.</p>
+                        <p><strong>Montant facture :</strong> {{ number_format($selectedInvoiceAmount ?? 0, 2, ',', ' ') }}
+                            DA</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" wire:click="closeModals">Annuler</button>
+                        <button type="button" class="btn btn-success"
+                            wire:click="marquerInvoiceFacturePaye({{ $selectedInvoiceId ?? 'null' }})">
+                            <i class="fas fa-check"></i> Confirmer
                         </button>
                     </div>
                 </div>
